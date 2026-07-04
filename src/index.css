@@ -1,0 +1,72 @@
+/* =====================
+   CSS Custom Properties
+   ===================== */
+:root {
+  /* Background layers — dark theme */
+  --bg-900: #111214;
+  --bg-800: #1e1f22;
+  --bg-700: #2b2d31;
+  --bg-600: #383a40;
+  --bg-500: #43444b;
+
+  /* Text */
+  --text-primary: #f2f3f5;
+  --text-secondary: #b5bac1;
+  --text-muted: #80848e;
+
+  /* Accent */
+  --accent: #5865f2;
+  --accent-hover: #4752c4;
+  --accent-light: #8d96f6;
+
+  /* Status / semantic */
+  --danger: #ed4245;
+  --success: #3ba55c;
+  --warning: #faa81a;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.06);
+
+  /* Font */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* =====================
+   Reset
+   ===================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-600); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg-500); }
+
+/* Selection */
+::selection { background: var(--accent); color: white; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

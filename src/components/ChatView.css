@@ -1,0 +1,320 @@
+.chatview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--hw-bg);
+  min-width: 0;
+  font-family: var(--font-mono);
+  position: relative;
+}
+
+/* noise over entire chat area */
+.chatview::after {
+  content: '';
+  background-image: var(--hw-noise-bg);
+  background-size: var(--hw-noise-tile) var(--hw-noise-tile);
+  mix-blend-mode: color-burn;
+  opacity: 0.12;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+/* Header */
+.cv-header {
+  height: 52px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+  position: relative;
+  z-index: 6;
+}
+
+.cv-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  color: var(--hw-fg-50);
+}
+
+.cv-ch-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--hw-fg);
+  white-space: nowrap;
+}
+
+.cv-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.cv-group-name {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--hw-fg-30);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-members {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--hw-fg-30);
+  flex-shrink: 0;
+}
+
+/* Messages */
+.cv-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hw-fg-15) transparent;
+}
+
+/* Channel start — hermes-style large heading */
+.cv-start {
+  padding: 48px 28px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.cv-start-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--hw-fg-30);
+  margin-bottom: 12px;
+}
+
+.cv-start-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 4vw, 56px);
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  color: var(--hw-fg);
+  display: flex;
+  flex-direction: column;
+}
+
+.cv-start-sub {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--hw-fg-30);
+  margin-top: 14px;
+}
+
+/* Date divider */
+.cv-date-div {
+  display: flex;
+  align-items: center;
+  padding: 16px 28px 8px;
+  gap: 12px;
+}
+
+.cv-date-div::before,
+.cv-date-div::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.cv-date-div span {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--hw-fg-30);
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/* Messages */
+.cv-msg {
+  display: flex;
+  align-items: flex-start;
+  padding: 2px 28px;
+  gap: 14px;
+  transition: background 0.08s;
+}
+
+.cv-msg:hover { background: var(--hw-fg-04); }
+.cv-msg:not(.grouped) { margin-top: 16px; }
+
+/* avatar — paper white square, like hermes feature badges */
+.cv-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--hw-fg);
+  color: var(--hw-bg);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+.cv-msg.mine .cv-avatar {
+  background: var(--hw-accent);
+  color: var(--hw-bg);
+}
+
+.cv-ts-ghost {
+  width: 36px;
+  font-size: 10px;
+  color: transparent;
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 3px;
+  transition: color 0.1s;
+  line-height: 1.5;
+}
+
+.cv-msg:hover .cv-ts-ghost { color: var(--hw-fg-30); }
+
+.cv-msg-body { flex: 1; min-width: 0; }
+
+.cv-msg-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 3px;
+}
+
+/* author name — hermes style: serif extrabold */
+.cv-author {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--hw-fg);
+  text-transform: uppercase;
+}
+
+/* own messages — accent yellow name */
+.cv-author.me { color: var(--hw-accent); }
+
+.cv-ts {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--hw-fg-30);
+}
+
+.cv-text {
+  font-size: 13px;
+  color: rgba(245, 245, 245, 0.82);
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+  text-transform: none;
+}
+
+/* Input */
+.cv-input-area {
+  padding: 10px 24px 22px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 6;
+}
+
+/* input box — paper-white like hermes install command box */
+.cv-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  background: var(--hw-paper);
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.cv-input-wrap:focus-within {
+  border-color: var(--hw-accent);
+}
+
+.cv-input-prefix {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(0,0,242,0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(0,0,242,0.1);
+  align-self: stretch;
+  align-items: center;
+}
+
+.cv-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--hw-bg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 12px 12px;
+  resize: none;
+  max-height: 180px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.cv-input::placeholder { color: rgba(0,0,242,0.22); text-transform: none; }
+
+/* send button — hermes CTA style */
+.cv-send {
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  border-left: 1px solid rgba(0,0,242,0.1);
+  cursor: pointer;
+  color: rgba(0,0,242,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.cv-send.ready {
+  background: var(--hw-bg);
+  color: var(--hw-fg);
+  border-color: var(--hw-bg);
+}
+
+.cv-send.ready:hover { background: #1111cc; }
+.cv-send:disabled { cursor: not-allowed; }
+
+.cv-voice-notice {
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--hw-fg-30);
+  text-align: center;
+}

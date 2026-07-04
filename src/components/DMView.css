@@ -1,0 +1,104 @@
+.dmview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--hw-bg);
+  min-width: 0;
+  font-family: var(--font-mono);
+  position: relative;
+}
+
+.dmview::after {
+  content: '';
+  background-image: var(--hw-noise-bg);
+  background-size: var(--hw-noise-tile) var(--hw-noise-tile);
+  mix-blend-mode: color-burn;
+  opacity: 0.12;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+.dv-header {
+  height: 52px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+  position: relative;
+  z-index: 6;
+}
+
+.dv-header-left { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+
+.dv-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+
+.dv-name {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 800;
+  letter-spacing: 0.03em; text-transform: uppercase;
+  color: var(--hw-fg); white-space: nowrap;
+}
+
+.dv-uid { font-size: 10px; letter-spacing: 0.14em; color: var(--hw-fg-30); }
+
+.dv-tag {
+  font-size: 10px; letter-spacing: 0.14em;
+  color: var(--hw-fg-30); flex-shrink: 0;
+}
+
+.dv-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hw-fg-15) transparent;
+}
+
+/* DM start — hermes large serif heading */
+.dv-start {
+  padding: 48px 28px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.dv-start-eyebrow {
+  font-size: 11px; letter-spacing: 0.18em;
+  color: var(--hw-fg-30); margin-bottom: 12px;
+}
+
+.dv-start-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 4vw, 56px);
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  color: var(--hw-fg);
+}
+
+.dv-start-id {
+  font-size: 10px; color: var(--hw-fg-30);
+  letter-spacing: 0.1em; margin-top: 10px;
+  display: block;
+}
+
+.dv-start-sub {
+  font-size: 11px; letter-spacing: 0.12em;
+  color: var(--hw-fg-30); margin-top: 8px;
+}
+
+.dv-input-area {
+  padding: 10px 24px 22px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 6;
+}

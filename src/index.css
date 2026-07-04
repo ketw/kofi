@@ -1,72 +1,128 @@
-/* =====================
-   CSS Custom Properties
-   ===================== */
+/* =============================================
+   TeaChat — Hermes-faithful design system
+   ============================================= */
+
 :root {
-  /* Background layers — dark theme */
-  --bg-900: #111214;
-  --bg-800: #1e1f22;
-  --bg-700: #2b2d31;
-  --bg-600: #383a40;
-  --bg-500: #43444b;
+  /* exact hermes tokens */
+  --hw-bg:      #0000f2;
+  --hw-fg:      #f5f5f5;
+  --hw-accent:  #edff45;
+  --hw-paper:   #ffffff;
 
-  /* Text */
-  --text-primary: #f2f3f5;
-  --text-secondary: #b5bac1;
-  --text-muted: #80848e;
+  /* derived */
+  --hw-fg-50:   rgba(245,245,245,0.50);
+  --hw-fg-30:   rgba(245,245,245,0.30);
+  --hw-fg-15:   rgba(245,245,245,0.15);
+  --hw-fg-08:   rgba(245,245,245,0.08);
+  --hw-fg-04:   rgba(245,245,245,0.04);
+  --hw-bg-dim:  rgba(0,0,200,0.7);
 
-  /* Accent */
-  --accent: #5865f2;
-  --accent-hover: #4752c4;
-  --accent-light: #8d96f6;
+  --border:     rgba(245,245,245,0.14);
+  --border-paper: rgba(0,0,242,0.12);
 
-  /* Status / semantic */
-  --danger: #ed4245;
-  --success: #3ba55c;
-  --warning: #faa81a;
+  /* noise tile — exact from hermes source */
+  --hw-noise-bg: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --hw-noise-tile: 12.8rem;
 
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.06);
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
 
-  /* Font */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-primary);
+  /* frame border size — matches hermes --hw-frame calc(2.5 * vsq) */
+  --frame-size: 22px;
 }
 
-/* =====================
-   Reset
-   ===================== */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  background: var(--hw-bg);
 }
 
 body {
-  background: var(--bg-900);
+  background: var(--hw-bg);
+  color: var(--hw-fg);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* selection — exact hermes */
+::selection { background: var(--hw-accent); color: var(--hw-bg); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-600); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--bg-500); }
+::-webkit-scrollbar-thumb { background: var(--hw-fg-15); }
+::-webkit-scrollbar-thumb:hover { background: var(--hw-fg-30); }
 
-/* Selection */
-::selection { background: var(--accent); color: white; }
+:focus-visible { outline: 1px solid var(--hw-accent); outline-offset: 2px; }
 
-/* Focus ring */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* ── Noise overlay helper (exact hermes .hw-noise:after) ─────── */
+.hw-noise { position: relative; }
+.hw-noise::after {
+  content: '';
+  background-image: var(--hw-noise-bg);
+  background-size: var(--hw-noise-tile) var(--hw-noise-tile);
+  mix-blend-mode: color-burn;
+  opacity: 0.22;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* ── Vignette (radial darkening at edges) ────────────────────── */
+.hw-vignette::before {
+  content: '';
+  background: radial-gradient(120% 90% at 50% 42%, transparent 50%, var(--hw-bg) 100%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.25;
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Arc border animation (exact hermes .hw-arc) ─────────────── */
+@keyframes hw-arc-stroke {
+  0%   { background-position: 15% 15%; }
+  100% { background-position: 75% 75%; }
+}
+
+.hw-arc {
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    160deg,
+    transparent 0%, var(--hw-fg) 15%, var(--hw-accent) 20%,
+    var(--hw-bg) 25%, transparent 35% 40%,
+    var(--hw-fg) 55%, var(--hw-accent) 60%,
+    var(--hw-bg) 65%, transparent 75% 80%,
+    var(--hw-fg) 95%, var(--hw-accent) 100%
+  );
+  background-size: 300% 300%;
+  padding: 1.25px;
+  transition: opacity 0.2s;
+  animation: 2.23s linear infinite paused hw-arc-stroke;
+  position: absolute;
+  inset: 0;
+  mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+}
+
+.hw-arc-parent:hover .hw-arc,
+.hw-arc-parent:focus-visible .hw-arc {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+/* ── mono label style ────────────────────────────────────────── */
+.hw-mono {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }

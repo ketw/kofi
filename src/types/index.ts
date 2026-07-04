@@ -2,52 +2,64 @@ export interface User {
   id: string;
   username: string;
   displayName: string;
-  avatar?: string;
-  status: 'online' | 'away' | 'busy' | 'offline';
+  status: 'online' | 'away' | 'offline';
+  joinedAt: number;
 }
 
 export interface Message {
   id: string;
   authorId: string;
   content: string;
-  timestamp: Date;
+  timestamp: number;
   edited?: boolean;
-  reactions?: Reaction[];
-  replyTo?: string;
-}
-
-export interface Reaction {
-  emoji: string;
-  userIds: string[];
 }
 
 export interface Channel {
   id: string;
   name: string;
-  type: 'text' | 'voice' | 'announcement';
-  description?: string;
+  type: 'text' | 'voice';
   messages: Message[];
-  unread?: number;
+  unread: number;
 }
 
-export interface ChannelSection {
+export interface Group {
   id: string;
   name: string;
-  collapsed?: boolean;
+  code: string;
+  ownerIds: string[];
+  memberIds: string[];
   channels: Channel[];
-}
-
-export interface Space {
-  id: string;
-  name: string;
-  icon?: string;
-  sections: ChannelSection[];
-  members: string[];
+  createdAt: number;
 }
 
 export interface DirectMessage {
   id: string;
-  participantIds: string[];
+  participantIds: [string, string];
   messages: Message[];
-  unread?: number;
+  unread: number;
+}
+
+// Panels that can be open simultaneously as floating windows
+export type PanelId = 'connect' | 'groups' | 'chat' | 'settings' | 'chatwindow';
+
+export interface WindowState {
+  id: PanelId;
+  x: number;
+  y: number;
+  width: number;
+  height?: number;
+  zIndex: number;
+}
+
+export interface AppState {
+  me: User | null;
+  users: User[];
+  groups: Group[];
+  dms: DirectMessage[];
+  openWindows: WindowState[];
+  // active conversation shown inside the chat window
+  chatView:
+    | { type: 'home' }
+    | { type: 'group'; groupId: string; channelId: string }
+    | { type: 'dm'; dmId: string };
 }

@@ -203,20 +203,21 @@ function applyTheme(t: Theme) {
   r.setProperty('--r-button',      `${eff(R.buttons)}px`);
   r.setProperty('--r-input',       `${eff(R.inputs)}px`);
   r.setProperty('--r-bar',         `${eff(R.bar)}px`);
-  r.setProperty('--r-frame-inner', `${R.frameInnerEnabled ? eff(R.frameInner) : 0}px`);
-  // frameOuter checkbox ALWAYS controls whether outer radius is applied.
-  // global override only affects the value used, not the on/off state.
-  const outerR = R.frameOuter
-    ? `${eff(R.frameInner) + t.frameSize}px`
-    : '0px';
-  r.setProperty('--r-frame-outer', outerR);
 
-  // keep --border-radius as alias for windows (for components that use it)
-  r.setProperty('--border-radius',  `${eff(R.windows)}px`);
+  // inner toggle gates whether inner radius is applied at all
+  const innerVal = R.frameInnerEnabled ? eff(R.frameInner) : 0;
+  r.setProperty('--r-frame-inner', `${innerVal}px`);
+
+  // outer toggle gates whether outer radius is applied at all
+  // outer value = inner value + frame thickness (so curves are concentric)
+  const outerVal = R.frameOuter ? innerVal + t.frameSize : 0;
+  r.setProperty('--r-frame-outer', `${outerVal}px`);
+
+  // --border-radius alias for windows
+  r.setProperty('--border-radius', `${eff(R.windows)}px`);
 
   r.setProperty('--frame-size',      `${t.frameSize}px`);
   r.setProperty('--frame-color',     effectiveFrame);
-  r.setProperty('--frame-radius',    `${t.radii.globalEnabled ? t.radii.globalValue : t.radii.frameInner}px`);
 
   r.setProperty('--win-titlebar-h',  `${t.windowTitlebarHeight}px`);
   // focused border — if empty or not set, derive from accent color

@@ -34,7 +34,6 @@
   /* ── Frame (overridden by theme) ────────────── */
   --frame-size:   10px;
   --frame-color:  var(--hw-bg);
-  --frame-radius: 4px;
 
   /* ── Window variables (overridden by theme) ─── */
   --win-titlebar-h:    38px;

@@ -72,6 +72,22 @@ export const DEFAULT_THEME: Theme = {
 
 const PRESETS: Record<string, Partial<Theme>> = {
   'Hermes Blue': {},  // all defaults
+  'Ket': {
+    bgMode:               'color',
+    bgColor:              '#302b3f',
+    fgColor:              '#d2afb4',
+    accentColor:          '#d2afb4',
+    paperColor:           '#302b3f',
+    borderOpacity:        0.55,
+    borderRadius:         0,
+    frameSize:            4,
+    frameColor:           '#d2afb4',
+    windowTitlebarHeight: 24,
+    windowFocusedBorder:  'rgba(124,106,247,0.5)',
+    windowUnfocusedOp:    1,
+    barScale:             1.03,
+    noiseOpacity:         0.09,
+  },
   'Dark Slate': {
     bgColor: '#0f1117', fgColor: '#e8e8e8', accentColor: '#7c6af7',
     paperColor: '#1a1d27', frameSize: 16,
@@ -106,6 +122,14 @@ function fgDerived(fgColor: string, opacity: number): string {
   return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${opacity})`;
 }
 
+// border-paper: blend of paper color with bg color at borderOpacity
+// creates a subtle tint of bg on paper backgrounds
+function paperDerived(paperColor: string, bgColor: string, opacity: number): string {
+  const rgb = hexToRgb(bgColor);
+  if (!rgb) return `rgba(0,0,0,${opacity * 0.5})`;
+  return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${Math.min(opacity, 0.35)})`;
+}
+
 function applyTheme(t: Theme) {
   const r = document.documentElement.style;
   const effectiveBg = t.bgMode === 'image' && t.bgImage ? t.bgColor : t.bgColor;
@@ -124,6 +148,7 @@ function applyTheme(t: Theme) {
   r.setProperty('--hw-fg-04',  fgDerived(t.fgColor, 0.04));
 
   r.setProperty('--border',          fgDerived(t.fgColor, t.borderOpacity));
+  r.setProperty('--border-paper',    paperDerived(t.paperColor, t.bgColor, t.borderOpacity));
   r.setProperty('--border-radius',   `${t.borderRadius}px`);
 
   r.setProperty('--frame-size',      `${t.frameSize}px`);

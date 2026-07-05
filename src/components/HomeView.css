@@ -1,7 +1,6 @@
 .homeview {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: auto; overflow-x: hidden;
   background: var(--hw-bg);
   position: relative;
   font-family: var(--font-mono);
@@ -9,191 +8,128 @@
   scrollbar-color: var(--hw-fg-15) transparent;
 }
 
-/* noise — exact hw-noise */
 .hv-noise {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image: var(--hw-noise-bg);
   background-size: var(--hw-noise-tile) var(--hw-noise-tile);
   mix-blend-mode: color-burn;
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: 2;
+  opacity: var(--noise-opacity);
+  pointer-events: none; z-index: 2;
 }
 
-/* hero art — exact hermes position: absolute right, mix-blend-lighten */
 .hv-hero-art {
-  position: absolute;
-  top: -2%;
-  right: -3%;
-  width: 55%;
-  max-width: 860px;
-  height: auto;
-  object-fit: contain;
-  mix-blend-mode: lighten;
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.9;
-  z-index: 1;
+  position: absolute; top: -2%; right: -3%;
+  width: 55%; max-width: 860px; height: auto;
+  object-fit: contain; mix-blend-mode: lighten;
+  pointer-events: none; user-select: none;
+  opacity: 0.9; z-index: 1;
 }
 
-/* badge — sticky top-right like hermes */
 .hv-badge {
-  position: absolute;
-  top: 32px;
-  right: 32px;
-  width: clamp(48px, 5vw, 80px);
-  height: auto;
-  mix-blend-mode: lighten;
-  opacity: 0.65;
-  pointer-events: none;
-  z-index: 3;
+  position: absolute; top: 32px; right: 32px;
+  width: clamp(48px, 5vw, 80px); height: auto;
+  mix-blend-mode: lighten; opacity: 0.65;
+  pointer-events: none; z-index: 3;
 }
 
-/* main content block */
 .hv-inner {
-  position: relative;
-  z-index: 3;
-  padding: 52px 40px 40px;
-  max-width: 640px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
+  position: relative; z-index: 3;
+  padding: 52px 40px 40px; max-width: 640px;
+  display: flex; flex-direction: column; gap: 28px;
 }
 
 .hv-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--hw-fg-30);
+  font-size: 11px; letter-spacing: 0.2em; color: var(--hw-fg-30);
 }
 
-/* exact hermes title: serif light, huge, line-height 0.88, stacked */
 .hv-title {
   font-family: var(--font-display);
   font-weight: 300;
   font-size: clamp(52px, 7vw, 100px);
-  line-height: 0.88;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--hw-fg);
-  display: flex;
-  flex-direction: column;
+  line-height: 0.88; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--hw-fg);
+  display: flex; flex-direction: column;
 }
 
-/* identity card — paper white, exact hermes install command box style */
+/* identity card — uses paper color so it contrasts with bg */
 .hv-id-card {
   background: var(--hw-paper);
   max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  border-radius: var(--border-radius);
 }
 
-/* noise on paper card */
 .hv-id-card::after {
   content: '';
   background-image: var(--hw-noise-bg);
   background-size: var(--hw-noise-tile) var(--hw-noise-tile);
   mix-blend-mode: color-burn;
-  opacity: 0.15;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
+  opacity: var(--noise-opacity);
+  pointer-events: none; position: absolute; inset: 0;
 }
 
 .hv-id-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 9px 16px;
-  border-bottom: 1px solid rgba(0,0,242,0.07);
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; padding: 9px 16px;
+  border-bottom: 1px solid var(--border-paper);
 }
-
 .hv-id-row:last-child { border-bottom: none; }
 
 .hv-id-key {
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: rgba(0,0,242,0.38);
-  flex-shrink: 0;
+  font-size: 10px; letter-spacing: 0.16em;
+  color: var(--hw-bg); opacity: 0.38; flex-shrink: 0;
 }
 
 .hv-id-val {
-  font-size: 12px;
-  color: var(--hw-bg);
-  text-align: right;
+  font-size: 12px; color: var(--hw-bg); text-align: right;
 }
 
 .hv-id-mono {
-  font-size: 10px;
-  color: rgba(0,0,242,0.45);
-  word-break: break-all;
+  font-size: 10px; opacity: 0.45; word-break: break-all;
 }
 
 .hv-hint {
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--hw-fg-15);
+  font-size: 10px; letter-spacing: 0.16em; color: var(--hw-fg-15);
 }
 
-/* Feature grid — exact hermes 3-column feature section */
 .hv-features {
-  position: relative;
-  z-index: 3;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 0 28px 40px;
-  margin-top: -20px;
+  position: relative; z-index: 3;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; padding: 0 28px 40px; margin-top: -20px;
 }
 
 .hv-feat {
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
   background: var(--hw-bg);
-  aspect-ratio: 666 / 574;
-  cursor: default;
+  aspect-ratio: 666 / 574; cursor: default;
+  border-radius: var(--border-radius);
 }
 
 .hv-feat-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* exact hermes: mix-blend-screen on feature images */
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
   mix-blend-mode: screen;
-  pointer-events: none;
-  user-select: none;
+  pointer-events: none; user-select: none;
 }
 
 .hv-feat-body {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  z-index: 3;
-  background: linear-gradient(transparent, rgba(0,0,180,0.75));
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 16px; z-index: 3;
+  background: linear-gradient(transparent, var(--hw-fg-08));
 }
 
 .hv-feat-eyebrow {
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  color: var(--hw-fg-50);
-  margin-bottom: 4px;
+  font-size: 9px; letter-spacing: 0.2em;
+  color: var(--hw-fg-50); margin-bottom: 4px;
 }
 
 .hv-feat-title {
   font-family: var(--font-display);
   font-weight: 300;
   font-size: clamp(16px, 2.5vw, 28px);
-  line-height: 1;
-  letter-spacing: 0.03em;
-  color: var(--hw-fg);
-  text-transform: uppercase;
+  line-height: 1; letter-spacing: 0.03em;
+  color: var(--hw-fg); text-transform: uppercase;
 }
 
 @media (max-width: 768px) {

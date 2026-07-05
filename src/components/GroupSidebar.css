@@ -1,165 +1,105 @@
 .group-sidebar {
   width: 220px;
-  background: rgba(0, 0, 200, 0.55);
+  background: var(--hw-fg-04);
   border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  overflow: hidden;
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow: hidden;
   font-family: var(--font-mono);
   position: relative;
 }
 
-/* noise on sidebar — exact hw-noise */
 .group-sidebar::after {
   content: '';
   background-image: var(--hw-noise-bg);
   background-size: var(--hw-noise-tile) var(--hw-noise-tile);
   mix-blend-mode: color-burn;
-  opacity: 0.15;
+  opacity: var(--noise-opacity);
   pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  position: absolute; inset: 0; z-index: 0;
 }
 
 .gs-header {
   padding: 16px 16px 14px;
   border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+  flex-shrink: 0; position: relative; z-index: 1;
 }
 
 .gs-name {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: 15px; font-weight: 800;
+  letter-spacing: 0.03em; text-transform: uppercase;
   color: var(--hw-fg);
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
 }
 
 .gs-code {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--hw-fg-30);
-  margin-top: 4px;
+  display: block; font-size: 10px;
+  letter-spacing: 0.18em; color: var(--hw-fg-30); margin-top: 4px;
 }
 
 .gs-owner {
-  display: inline-block;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  padding: 2px 7px;
-  background: var(--hw-accent);
-  color: var(--hw-bg);
-  margin-top: 6px;
+  display: inline-block; font-size: 9px;
+  letter-spacing: 0.14em; padding: 2px 7px;
+  background: var(--hw-accent); color: var(--hw-bg); margin-top: 6px;
 }
 
 .gs-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 0;
-  position: relative;
-  z-index: 1;
-  scrollbar-width: thin;
-  scrollbar-color: var(--hw-fg-15) transparent;
+  flex: 1; overflow-y: auto; padding: 10px 0;
+  position: relative; z-index: 1;
+  scrollbar-width: thin; scrollbar-color: var(--hw-fg-15) transparent;
 }
 
 .gs-section-hd {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  width: 100%; background: none; border: none; cursor: pointer;
   padding: 5px 8px 5px 14px;
-  color: var(--hw-fg-30);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--hw-fg-30); font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
   transition: color 0.1s;
 }
-
 .gs-section-hd:hover { color: var(--hw-fg-50); }
 .gs-section-hd span { flex: 1; text-align: left; }
 
 .gs-add-ch {
   background: none; border: none; cursor: pointer;
   color: inherit; display: flex; align-items: center;
-  padding: 2px; opacity: 0; transition: opacity 0.1s;
-  pointer-events: all;
+  padding: 2px; opacity: 0; transition: opacity 0.1s; pointer-events: all;
 }
 .gs-section-hd:hover .gs-add-ch { opacity: 1; }
 
 .gs-channels { padding: 2px 0; }
 
 .gs-ch {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: calc(100% - 16px);
-  margin: 1px 8px;
+  display: flex; align-items: center; gap: 7px;
+  width: calc(100% - 16px); margin: 1px 8px;
   padding: 6px 8px 6px 14px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--hw-fg-30);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-align: left;
-  text-transform: uppercase;
+  background: none; border: none; cursor: pointer;
+  color: var(--hw-fg-30); font-family: var(--font-mono);
+  font-size: 12px; letter-spacing: 0.06em;
+  text-align: left; text-transform: uppercase;
   transition: background 0.1s, color 0.1s;
 }
-
 .gs-ch:hover { background: var(--hw-fg-08); color: var(--hw-fg-50); }
-
-/* active channel — accent underline treatment like hermes tabs */
 .gs-ch.active {
-  background: var(--hw-fg-15);
-  color: var(--hw-fg);
-  border-left: 2px solid var(--hw-accent);
-  padding-left: 12px;
+  background: var(--hw-fg-15); color: var(--hw-fg);
+  border-left: 2px solid var(--hw-accent); padding-left: 12px;
 }
-
 .gs-ch.unread { color: var(--hw-fg); font-weight: 700; }
 
 .gs-ch-icon { display: flex; flex-shrink: 0; }
 .gs-ch-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .gs-ch-badge {
-  background: var(--hw-accent);
-  color: var(--hw-bg);
-  font-size: 9px;
-  font-weight: 800;
-  min-width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  flex-shrink: 0;
+  background: var(--hw-accent); color: var(--hw-bg);
+  font-size: 9px; font-weight: 800; min-width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; flex-shrink: 0;
 }
 
-.gs-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 10px 14px;
-}
+.gs-divider { height: 1px; background: var(--border); margin: 10px 14px; }
 
 .gs-members-label {
-  padding: 4px 14px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--hw-fg-30);
-  text-transform: uppercase;
+  padding: 4px 14px; font-size: 10px;
+  letter-spacing: 0.16em; color: var(--hw-fg-30); text-transform: uppercase;
 }

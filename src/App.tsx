@@ -11,10 +11,12 @@ import FloatingWindow from './components/FloatingWindow';
 import ChatWindow from './components/ChatWindow';
 import HomeView from './components/HomeView';
 import Onboarding from './components/Onboarding';
+import AppBackground from './components/AppBackground';
 import ConnectPanel from './components/panels/ConnectPanel';
 import GroupsPanel from './components/panels/GroupsPanel';
 import ChatPanel from './components/panels/ChatPanel';
 import SettingsPanel from './components/panels/SettingsPanel';
+import ThemePanel from './components/panels/ThemePanel';
 import type { PanelId } from './types';
 import './App.css';
 
@@ -24,6 +26,7 @@ const WINDOW_TITLES: Record<PanelId, string> = {
   chat:       'Messages',
   chatwindow: 'Chat',
   settings:   'Settings',
+  theme:      'Theme',
 };
 
 export default function App() {
@@ -41,8 +44,8 @@ export default function App() {
   const groupUnread = groups.flatMap(g => g.channels).reduce((a, c) => a + c.unread, 0);
   const totalUnread = dmUnread + groupUnread;
 
-  function handleOpenDM(dmId: string) { openDMChat(dmId); }
-  function handleOpenGroup(groupId: string) { openGroupChat(groupId); }
+  function handleOpenDM(dmId: string)    { openDMChat(dmId); }
+  function handleOpenGroup(gid: string)  { openGroupChat(gid); }
 
   function renderWindowContent(id: PanelId) {
     switch (id) {
@@ -53,37 +56,31 @@ export default function App() {
       case 'chat':
         return <ChatPanel onOpenDM={handleOpenDM} onOpenGroup={handleOpenGroup} />;
       case 'chatwindow':
-        return (
-          <ChatWindow
-            chatView={chatView}
-            users={users}
-            me={me}
-            groups={groups}
-            dms={dms}
-          />
-        );
+        return <ChatWindow chatView={chatView} users={users} me={me} groups={groups} dms={dms} />;
       case 'settings':
         return <SettingsPanel />;
+      case 'theme':
+        return <ThemePanel />;
     }
   }
 
   return (
     <div className="app">
-      {/* Hermes hw-frame — fixed thick border all around */}
+      {/* outer border frame */}
       <div className="hw-frame" aria-hidden />
 
-      {/* Full-bleed background — hero art, noise, home content */}
-      <div className="app-bg">
-        <img className="app-hero-art" src="/img/hero-art.jpg" alt="" aria-hidden />
-        <HomeView
-          username={me.username}
-          userId={me.id}
-          groupCount={groups.length}
-          dmUnread={dmUnread}
-        />
-      </div>
+      {/* background — image or color + hero art */}
+      <AppBackground />
 
-      {/* Floating icon bar */}
+      {/* home screen content */}
+      <HomeView
+        username={me.username}
+        userId={me.id}
+        groupCount={groups.length}
+        dmUnread={dmUnread}
+      />
+
+      {/* floating icon bar */}
       <FloatingBar
         openWindows={openWindows}
         onToggle={toggleWindow}
@@ -91,13 +88,9 @@ export default function App() {
         totalUnread={totalUnread}
       />
 
-      {/* Floating windows */}
+      {/* floating windows */}
       {openWindows.map(win => (
-        <FloatingWindow
-          key={win.id}
-          win={win}
-          title={WINDOW_TITLES[win.id]}
-        >
+        <FloatingWindow key={win.id} win={win} title={WINDOW_TITLES[win.id]}>
           {renderWindowContent(win.id)}
         </FloatingWindow>
       ))}

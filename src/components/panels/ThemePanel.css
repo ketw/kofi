@@ -1,0 +1,304 @@
+.tp {
+  display: flex;
+  flex-direction: column;
+  background: var(--hw-paper);
+  color: var(--hw-bg);
+  font-family: var(--font-mono);
+}
+
+/* ── Section ─────────────────────────────────────── */
+.tp-section {
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.tp-section-hd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  background: rgba(0,0,0,0.03);
+  border: none;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(0,0,0,0.5);
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+.tp-section-hd:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.8); }
+.tp-section-arrow { font-size: 9px; flex-shrink: 0; }
+
+.tp-section-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* ── Row ─────────────────────────────────────────── */
+.tp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 26px;
+}
+
+.tp-row-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(0,0,0,0.38);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tp-row-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* ── Color picker ────────────────────────────────── */
+.tp-colorpick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tp-colorpick input[type="color"] {
+  width: 28px;
+  height: 22px;
+  border: 1px solid rgba(0,0,0,0.15);
+  padding: 1px;
+  cursor: pointer;
+  background: none;
+  border-radius: 0;
+}
+
+.tp-colorpick-val {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(0,0,0,0.5);
+  min-width: 60px;
+}
+
+.tp-link {
+  background: none;
+  border: none;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(0,0,242,0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.1s;
+}
+.tp-link:hover { color: var(--hw-bg); }
+
+/* ── Slider ──────────────────────────────────────── */
+.tp-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.tp-slider input[type="range"] {
+  flex: 1;
+  height: 3px;
+  accent-color: var(--hw-bg);
+  cursor: pointer;
+}
+
+.tp-slider-val {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(0,0,0,0.45);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Select ──────────────────────────────────────── */
+.tp-select {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.15);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(0,0,0,0.65);
+  padding: 3px 6px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.1s;
+}
+.tp-select:focus { border-color: rgba(0,0,0,0.4); }
+
+/* ── Toggle ──────────────────────────────────────── */
+.tp-toggle {
+  padding: 3px 10px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: none;
+  color: rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tp-toggle.on {
+  background: var(--hw-bg);
+  color: var(--hw-paper);
+  border-color: var(--hw-bg);
+}
+
+/* ── Segment control ─────────────────────────────── */
+.tp-seg {
+  display: flex;
+  border: 1px solid rgba(0,0,0,0.14);
+}
+
+.tp-seg-btn {
+  flex: 1;
+  padding: 4px 10px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tp-seg-btn:not(:last-child) { border-right: 1px solid rgba(0,0,0,0.1); }
+.tp-seg-btn.active { background: var(--hw-bg); color: white; }
+.tp-seg-btn:not(.active):hover { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.7); }
+
+/* ── Presets ─────────────────────────────────────── */
+.tp-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tp-preset-btn {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(0,0,0,0.55);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+.tp-preset-btn:hover {
+  background: var(--hw-bg);
+  color: white;
+  border-color: var(--hw-bg);
+}
+
+/* ── Image ───────────────────────────────────────── */
+.tp-imgrow { display: flex; gap: 6px; align-items: center; }
+
+.tp-upload-btn {
+  padding: 5px 10px;
+  background: var(--hw-bg);
+  color: white;
+  border: none;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+.tp-upload-btn:hover { opacity: 0.85; }
+
+.tp-clear-btn {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid rgba(200,0,0,0.3);
+  color: rgba(160,0,0,0.7);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.tp-clear-btn:hover { background: rgba(200,0,0,0.06); }
+
+.tp-img-preview {
+  border: 1px solid rgba(0,0,0,0.1);
+  overflow: hidden;
+  height: 72px;
+}
+.tp-img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Export / Import ─────────────────────────────── */
+.tp-export-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tp-export-btn {
+  flex: 2;
+  padding: 7px;
+  background: var(--hw-bg);
+  color: white;
+  border: none;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+.tp-export-btn:hover { opacity: 0.85; }
+
+.tp-reset-btn {
+  flex: 1;
+  padding: 7px;
+  background: none;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(0,0,0,0.45);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tp-reset-btn:hover { background: rgba(200,0,0,0.06); color: rgba(160,0,0,0.8); border-color: rgba(200,0,0,0.25); }
+
+.tp-import-area {
+  width: 100%;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  padding: 8px 10px;
+  color: rgba(0,0,0,0.7);
+  resize: vertical;
+  outline: none;
+  text-transform: none;
+  line-height: 1.5;
+  transition: border-color 0.12s;
+}
+.tp-import-area:focus { border-color: rgba(0,0,0,0.35); }
+.tp-import-area::placeholder { color: rgba(0,0,0,0.2); text-transform: none; }
+
+.tp-import-err {
+  font-size: 10px;
+  color: #cc2222;
+  letter-spacing: 0.1em;
+}
+
+.tp-import-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tp-import-btn:hover { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.8); }

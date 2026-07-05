@@ -40,7 +40,7 @@ export interface DirectMessage {
 }
 
 // Panels that can be open simultaneously as floating windows
-export type PanelId = 'connect' | 'groups' | 'chat' | 'settings' | 'chatwindow';
+export type PanelId = 'connect' | 'groups' | 'chat' | 'settings' | 'chatwindow' | 'theme';
 
 export interface WindowState {
   id: PanelId;

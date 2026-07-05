@@ -1,0 +1,29 @@
+.app-bg-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-bg-image {
+  position: absolute;
+  inset: -20px; /* extra margin so blur doesn't show edges */
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.app-hero-art {
+  position: absolute;
+  top: -5%;
+  right: -3%;
+  width: 58%;
+  max-width: 1000px;
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: lighten;
+  user-select: none;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s;
+}

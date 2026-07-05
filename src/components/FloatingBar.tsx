@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link2, Users, MessageSquare, Settings, MessagesSquare } from 'lucide-react';
+import { Link2, Users, MessageSquare, Settings, MessagesSquare, Palette } from 'lucide-react';
 import type { PanelId, WindowState } from '../types';
 import './FloatingBar.css';
 
@@ -16,6 +16,7 @@ const BUTTONS: { id: PanelId; icon: React.ReactNode; tooltip: string }[] = [
   { id: 'chat',       icon: <MessageSquare size={17} />,   tooltip: 'Messages'   },
   { id: 'chatwindow', icon: <MessagesSquare size={17} />,  tooltip: 'Chat'       },
   { id: 'settings',   icon: <Settings size={17} />,        tooltip: 'Settings'   },
+  { id: 'theme',      icon: <Palette size={17} />,         tooltip: 'Theme'      },
 ];
 
 export default function FloatingBar({ openWindows, onToggle, username, totalUnread }: Props) {

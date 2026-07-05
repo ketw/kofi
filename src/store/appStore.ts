@@ -88,6 +88,7 @@ const WINDOW_DEFAULTS: Record<PanelId, { width: number; height?: number; x: numb
   chat:       { width: 400,  x: 160, y: 80  },
   settings:   { width: 360,  x: 200, y: 80  },
   chatwindow: { width: 820,  height: 560, x: 80, y: 80 },
+  theme:      { width: 340,  x: 240, y: 80  },
 };
 
 export function toggleWindow(id: PanelId) {

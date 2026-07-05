@@ -1,9 +1,10 @@
-/* Floating icon bar — centered top, pill shape over the blue bg */
+/* Floating icon bar — centered top, scales with --bar-scale */
 .fbar {
   position: fixed;
   top: calc(var(--frame-size) + 12px);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(var(--bar-scale));
+  transform-origin: top center;
   z-index: 500;
 
   display: flex;
@@ -15,9 +16,7 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   padding: 5px 8px;
-
-  /* no border-radius on main frame — but bar itself gets slight rounding */
-  border-radius: 2px;
+  border-radius: var(--border-radius);
 }
 
 .fbar-brand {

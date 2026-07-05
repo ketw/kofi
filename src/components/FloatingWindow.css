@@ -1,4 +1,4 @@
-/* Floating window — paper white, sharp corners, Game Bar style */
+/* Floating window — paper white, theme-driven corners, Game Bar style */
 .fw {
   position: fixed;
   background: var(--hw-paper);
@@ -8,10 +8,19 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 12px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
-  /* noise overlay */
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
   isolation: isolate;
   min-height: 120px;
   max-height: calc(100vh - var(--frame-size) * 2 - 80px);
+  transition: opacity 0.15s;
+  opacity: var(--win-unfocus-op);
+}
+
+.fw:focus-within,
+.fw.focused {
+  border-color: var(--win-focus-border);
+  opacity: 1;
 }
 
 /* noise on every window — exact hw-noise */
@@ -32,7 +41,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px 9px;
+  padding: 0 14px;
+  height: var(--win-titlebar-h);
   background: var(--hw-paper);
   border-bottom: 1px solid rgba(0, 0, 242, 0.1);
   cursor: grab;

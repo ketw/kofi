@@ -8,7 +8,7 @@ export interface Theme {
   bgImage:        string;       // data URL or ''
   bgImageBlur:    number;       // px 0–20
   bgImageOpacity: number;       // 0–1
-  bgImageSize:    'cover' | 'contain' | 'auto';
+  bgImageSize:    'cover' | 'contain' | 'auto' | 'fill' | 'fit-width' | 'fit-height' | 'center' | 'tile' | 'tile-x' | 'tile-y' | 'stretch';
 
   // Core colors
   fgColor:        string;       // foreground / text

@@ -161,7 +161,7 @@ export default function ThemePanel() {
             </Row>
             <Row label="Size">
               <Select value={theme.bgImageSize}
-                options={['cover', 'contain', 'auto']}
+                options={['cover', 'contain', 'fill', 'stretch', 'center', 'fit-width', 'fit-height', 'tile', 'tile-x', 'tile-y', 'auto']}
                 onChange={v => set({ bgImageSize: v as any })} />
             </Row>
           </>

@@ -251,7 +251,15 @@ const STORAGE_KEY = 'teachat_theme_v1';
 function loadSaved(): Theme {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_THEME, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT_THEME,
+        ...parsed,
+        // deep merge radii so new fields (e.g. frameInnerEnabled) always exist
+        radii: { ...DEFAULT_THEME.radii, ...(parsed.radii ?? {}) },
+      };
+    }
   } catch {}
   return DEFAULT_THEME;
 }
@@ -272,7 +280,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const applyPreset = useCallback((name: string) => {
     const preset = PRESETS[name];
-    if (preset) setTheme({ ...DEFAULT_THEME, ...preset });
+    if (preset) setTheme({
+      ...DEFAULT_THEME,
+      ...preset,
+      // deep merge radii so frameInnerEnabled and other new fields always exist
+      radii: { ...DEFAULT_THEME.radii, ...(preset.radii ?? {}) },
+    });
   }, []);
 
   const exportTheme = useCallback(() => JSON.stringify(theme, null, 2), [theme]);
@@ -280,7 +293,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const importTheme = useCallback((json: string) => {
     try {
       const parsed = JSON.parse(json);
-      setTheme({ ...DEFAULT_THEME, ...parsed });
+      setTheme({
+        ...DEFAULT_THEME,
+        ...parsed,
+        radii: { ...DEFAULT_THEME.radii, ...(parsed.radii ?? {}) },
+      });
       return true;
     } catch { return false; }
   }, []);

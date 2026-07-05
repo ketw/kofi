@@ -231,23 +231,7 @@
 .tp-radii-global {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.tp-radii-global-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: var(--hw-bg);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.tp-radii-global-slider {
-  flex: 1;
+  gap: 10px;
 }
 
 .tp-check {
@@ -258,25 +242,6 @@
   flex-shrink: 0;
 }
 
-.tp-radii-note {
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  color: var(--hw-bg);
-  opacity: 0.35;
-  line-height: 1.5;
-  padding: 0 2px;
-}
-
-.tp-radii-check-row {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 4px 0;
-  border-top: 1px solid var(--border-paper);
-  border-bottom: 1px solid var(--border-paper);
-  margin: 4px 0;
-}
-
 .tp-check-label {
   display: flex;
   align-items: center;
@@ -285,11 +250,51 @@
   letter-spacing: 0.14em;
   color: var(--hw-bg);
   cursor: pointer;
+  flex: 1;
 }
 
-/* greyed-out state when global override is active */
+.tp-radii-note {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--hw-bg);
+  opacity: 0.35;
+  line-height: 1.5;
+}
+
+/* frame toggle group — visually distinct, never disabled */
+.tp-radii-frame-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--border-paper);
+  border-left: 2px solid var(--hw-bg);
+  opacity: 0.85; /* slightly dimmed but never pointer-events:none */
+}
+
+.tp-radii-check-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* small ON/OFF badge next to frame toggles */
+.tp-radii-badge {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--hw-bg);
+  opacity: 0.45;
+  border: 1px solid var(--border-paper);
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+/* greyed per-element sliders when global override is active
+   pointer-events:none means sliders can't be moved, but checkboxes
+   above this div are OUTSIDE it so they stay interactive */
 .tp-disabled {
-  opacity: 0.38;
+  opacity: 0.35;
   pointer-events: none;
   user-select: none;
 }

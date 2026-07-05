@@ -209,9 +209,10 @@ export default function ThemePanel() {
 
       {/* ── Corner Radii ─────────────────────────────────────── */}
       <Section title="Corner Radii">
-        {/* Global override toggle */}
+
+        {/* ── Global override ─────────────── */}
         <div className="tp-radii-global">
-          <label className="tp-radii-global-label hw-mono">
+          <label className="tp-check-label hw-mono">
             <input
               type="checkbox"
               className="tp-check"
@@ -220,53 +221,57 @@ export default function ThemePanel() {
             />
             Global Override
           </label>
-          <div className={`tp-radii-global-slider ${!theme.radii.globalEnabled ? 'tp-disabled' : ''}`}>
-            <Slider
-              value={theme.radii.globalValue}
-              min={0} max={32} unit="px"
-              onChange={v => set({ radii: { ...theme.radii, globalValue: v } })}
-            />
-          </div>
+          <Slider
+            value={theme.radii.globalValue}
+            min={0} max={32} unit="px"
+            onChange={v => set({ radii: { ...theme.radii, globalValue: v } })}
+          />
         </div>
         <p className="tp-radii-note hw-mono">
           {theme.radii.globalEnabled
-            ? 'All values below are overridden — stored values preserved'
-            : 'Set per-element values below'}
+            ? 'Forces all radius values — toggles below still control on/off'
+            : 'Per-element values active'}
         </p>
 
-        {/* Frame toggles — ALWAYS interactive, global only affects values not on/off */}
-        <div className="tp-radii-check-row">
-          <label className="tp-check-label hw-mono">
-            <input
-              type="checkbox"
-              className="tp-check"
-              checked={theme.radii.frameInnerEnabled}
-              onChange={e => set({ radii: { ...theme.radii, frameInnerEnabled: e.target.checked } })}
-            />
-            Frame Inner Radius
-          </label>
-          <span className="tp-radii-note hw-mono">
-            {theme.radii.frameInnerEnabled ? 'Inner edge rounded — clips content' : 'Sharp inner corners'}
-          </span>
+        {/* ── Frame toggles — NEVER disabled by global ─── */}
+        <div className="tp-radii-frame-toggles">
+          <div className="tp-radii-check-row">
+            <label className="tp-check-label hw-mono">
+              <input
+                type="checkbox"
+                className="tp-check"
+                checked={theme.radii.frameInnerEnabled}
+                onChange={e => set({ radii: { ...theme.radii, frameInnerEnabled: e.target.checked } })}
+              />
+              Frame Inner Rounded
+            </label>
+            <span className="tp-radii-badge hw-mono">
+              {theme.radii.frameInnerEnabled ? 'ON' : 'OFF'}
+            </span>
+          </div>
+
+          <div className="tp-radii-check-row">
+            <label className="tp-check-label hw-mono">
+              <input
+                type="checkbox"
+                className="tp-check"
+                checked={theme.radii.frameOuter}
+                onChange={e => set({ radii: { ...theme.radii, frameOuter: e.target.checked } })}
+              />
+              Frame Outer Rounded
+            </label>
+            <span className="tp-radii-badge hw-mono">
+              {theme.radii.frameOuter ? 'ON' : 'OFF'}
+            </span>
+          </div>
+          <p className="tp-radii-note hw-mono">
+            These toggles are always active — global override only forces the radius value, not on/off
+          </p>
         </div>
 
-        <div className="tp-radii-check-row">
-          <label className="tp-check-label hw-mono">
-            <input
-              type="checkbox"
-              className="tp-check"
-              checked={theme.radii.frameOuter}
-              onChange={e => set({ radii: { ...theme.radii, frameOuter: e.target.checked } })}
-            />
-            Frame Outer Radius
-          </label>
-          <span className="tp-radii-note hw-mono">
-            {theme.radii.frameOuter ? 'Outer edge rounded — outer = inner + frame size' : 'Sharp outer corners'}
-          </span>
-        </div>
-
+        {/* ── Per-element sliders — greyed when global on ── */}
         <div className={theme.radii.globalEnabled ? 'tp-disabled' : ''}>
-          <Row label="Frame Inner Value">
+          <Row label="Frame Inner px">
             <Slider value={theme.radii.frameInner} min={0} max={32} unit="px"
               onChange={v => set({ radii: { ...theme.radii, frameInner: v } })} />
           </Row>
@@ -291,6 +296,7 @@ export default function ThemePanel() {
               onChange={v => set({ radii: { ...theme.radii, bar: v } })} />
           </Row>
         </div>
+
       </Section>
 
       {/* ── Windows ─────────────────────────────────────────── */}

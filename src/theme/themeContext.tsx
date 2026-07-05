@@ -194,26 +194,28 @@ function applyTheme(t: Theme) {
   r.setProperty('--border',          fgDerived(t.fgColor, t.borderOpacity));
   r.setProperty('--border-paper',    paperDerived(t.paperColor, t.bgColor, t.borderOpacity));
 
-  // ── Corner radii — resolve effective values ────────────────
+  // ── Corner radii ──────────────────────────────────────────
   const R = t.radii;
+  // eff() — returns globalValue when global is on, otherwise the per-element value
+  // This ONLY affects values, never the enabled/disabled toggles
   const eff = (v: number) => R.globalEnabled ? R.globalValue : v;
 
-  r.setProperty('--r-window',      `${eff(R.windows)}px`);
-  r.setProperty('--r-panel',       `${eff(R.panels)}px`);
-  r.setProperty('--r-button',      `${eff(R.buttons)}px`);
-  r.setProperty('--r-input',       `${eff(R.inputs)}px`);
-  r.setProperty('--r-bar',         `${eff(R.bar)}px`);
+  r.setProperty('--r-window',  `${eff(R.windows)}px`);
+  r.setProperty('--r-panel',   `${eff(R.panels)}px`);
+  r.setProperty('--r-button',  `${eff(R.buttons)}px`);
+  r.setProperty('--r-input',   `${eff(R.inputs)}px`);
+  r.setProperty('--r-bar',     `${eff(R.bar)}px`);
 
-  // inner toggle gates whether inner radius is applied — fully independent
+  // Frame inner: toggle gates on/off, eff() sets the value
   const innerVal = R.frameInnerEnabled ? eff(R.frameInner) : 0;
   r.setProperty('--r-frame-inner', `${innerVal}px`);
 
-  // outer toggle gates whether outer radius is applied — fully independent
-  // outer uses its OWN resolved value, NOT innerVal, so toggling inner never affects outer
+  // Frame outer: toggle gates on/off, value = resolved inner + frame thickness
+  // eff() is applied to the inner value so global override propagates to outer too
   const outerVal = R.frameOuter ? eff(R.frameInner) + t.frameSize : 0;
   r.setProperty('--r-frame-outer', `${outerVal}px`);
 
-  // --border-radius alias for windows
+  // --border-radius alias — windows value
   r.setProperty('--border-radius', `${eff(R.windows)}px`);
 
   r.setProperty('--frame-size',      `${t.frameSize}px`);
@@ -251,15 +253,7 @@ const STORAGE_KEY = 'teachat_theme_v1';
 function loadSaved(): Theme {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        ...DEFAULT_THEME,
-        ...parsed,
-        // deep merge radii so new fields (e.g. frameInnerEnabled) always exist
-        radii: { ...DEFAULT_THEME.radii, ...(parsed.radii ?? {}) },
-      };
-    }
+    if (raw) return { ...DEFAULT_THEME, ...JSON.parse(raw) };
   } catch {}
   return DEFAULT_THEME;
 }
@@ -280,12 +274,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const applyPreset = useCallback((name: string) => {
     const preset = PRESETS[name];
-    if (preset) setTheme({
-      ...DEFAULT_THEME,
-      ...preset,
-      // deep merge radii so frameInnerEnabled and other new fields always exist
-      radii: { ...DEFAULT_THEME.radii, ...(preset.radii ?? {}) },
-    });
+    if (preset) setTheme({ ...DEFAULT_THEME, ...preset });
   }, []);
 
   const exportTheme = useCallback(() => JSON.stringify(theme, null, 2), [theme]);
@@ -293,11 +282,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const importTheme = useCallback((json: string) => {
     try {
       const parsed = JSON.parse(json);
-      setTheme({
-        ...DEFAULT_THEME,
-        ...parsed,
-        radii: { ...DEFAULT_THEME.radii, ...(parsed.radii ?? {}) },
-      });
+      setTheme({ ...DEFAULT_THEME, ...parsed });
       return true;
     } catch { return false; }
   }, []);

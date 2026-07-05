@@ -202,13 +202,12 @@ function applyTheme(t: Theme) {
   r.setProperty('--r-input',       `${eff(R.inputs)}px`);
   r.setProperty('--r-bar',         `${eff(R.bar)}px`);
   r.setProperty('--r-frame-inner', `${eff(R.frameInner)}px`);
-  // outer frame: only apply if frameOuter enabled (or global override)
-  const outerR = R.globalEnabled
-    ? R.globalValue + t.frameSize
-    : R.frameOuter
-      ? eff(R.frameInner) + t.frameSize
-      : '0';
-  r.setProperty('--r-frame-outer', typeof outerR === 'number' ? `${outerR}px` : outerR);
+  // frameOuter checkbox ALWAYS controls whether outer radius is applied.
+  // global override only affects the value used, not the on/off state.
+  const outerR = R.frameOuter
+    ? `${eff(R.frameInner) + t.frameSize}px`
+    : '0px';
+  r.setProperty('--r-frame-outer', outerR);
 
   // keep --border-radius as alias for windows (for components that use it)
   r.setProperty('--border-radius',  `${eff(R.windows)}px`);

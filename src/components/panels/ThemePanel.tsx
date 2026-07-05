@@ -240,23 +240,25 @@ export default function ThemePanel() {
             <Slider value={theme.radii.frameInner} min={0} max={32} unit="px"
               onChange={v => set({ radii: { ...theme.radii, frameInner: v } })} />
           </Row>
+        </div>
 
-          {/* Frame outer — checkbox to enable */}
-          <div className="tp-radii-check-row">
-            <label className="tp-check-label hw-mono">
-              <input
-                type="checkbox"
-                className="tp-check"
-                checked={theme.radii.frameOuter}
-                onChange={e => set({ radii: { ...theme.radii, frameOuter: e.target.checked } })}
-              />
-              Frame Outer Corners
-            </label>
-            <span className="tp-radii-note hw-mono">
-              {theme.radii.frameOuter ? 'outer = inner + frame size' : 'Sharp outer corners'}
-            </span>
-          </div>
+        {/* Frame outer — ALWAYS interactive, even when global override is on */}
+        <div className="tp-radii-check-row">
+          <label className="tp-check-label hw-mono">
+            <input
+              type="checkbox"
+              className="tp-check"
+              checked={theme.radii.frameOuter}
+              onChange={e => set({ radii: { ...theme.radii, frameOuter: e.target.checked } })}
+            />
+            Frame Outer Corners
+          </label>
+          <span className="tp-radii-note hw-mono">
+            {theme.radii.frameOuter ? 'outer = inner + frame size' : 'Sharp outer corners'}
+          </span>
+        </div>
 
+        <div className={theme.radii.globalEnabled ? 'tp-disabled' : ''}>
           <Row label="Windows">
             <Slider value={theme.radii.windows} min={0} max={32} unit="px"
               onChange={v => set({ radii: { ...theme.radii, windows: v } })} />

@@ -17,7 +17,8 @@
 }
 
 .fw:focus-within,
-.fw.focused {
+.fw.focused,
+.fw.fw--focused {
   border-color: var(--win-focus-border);
   opacity: 1;
 }

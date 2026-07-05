@@ -81,6 +81,23 @@ function setState(patch: Partial<AppState>) {
 export function subscribe(l: Listener) { listeners.add(l); return () => listeners.delete(l); }
 export function getState() { return state; }
 
+// which window is currently "focused" (last mousedown-ed)
+let _focusedId: PanelId | null = null;
+const focusListeners = new Set<Listener>();
+
+export function getFocusedId() { return _focusedId; }
+
+export function setFocusedWindow(id: PanelId | null) {
+  if (_focusedId === id) return;
+  _focusedId = id;
+  focusListeners.forEach(l => l());
+}
+
+export function subscribeFocus(l: Listener) {
+  focusListeners.add(l);
+  return () => focusListeners.delete(l);
+}
+
 // ── window management ───────────────────────────────────────────
 const WINDOW_DEFAULTS: Record<PanelId, { width: number; height?: number; x: number; y: number }> = {
   connect:    { width: 360,  x: 80,  y: 80  },
@@ -108,11 +125,13 @@ export function toggleWindow(id: PanelId) {
 
 export function closeWindow(id: PanelId) {
   setState({ openWindows: state.openWindows.filter(w => w.id !== id) });
+  if (_focusedId === id) setFocusedWindow(null);
 }
 
 export function bringToFront(id: PanelId) {
   zTop++;
   setState({ openWindows: state.openWindows.map(w => w.id === id ? { ...w, zIndex: zTop } : w) });
+  setFocusedWindow(id);
 }
 
 export function moveWindow(id: PanelId, x: number, y: number) {

@@ -69,10 +69,10 @@ export default function App() {
       {/* outer border frame */}
       <div className="hw-frame" aria-hidden />
 
-      {/* background — image or color + hero art */}
+      {/* pure theme-driven background — solid color + optional image/gif */}
       <AppBackground />
 
-      {/* home screen content */}
+      {/* minimal status card — bottom left, over the bg */}
       <HomeView
         username={me.username}
         userId={me.id}

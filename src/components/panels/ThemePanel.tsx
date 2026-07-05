@@ -80,7 +80,6 @@ export default function ThemePanel() {
   const [copyMsg, setCopyMsg] = useState('');
   const [importErr, setImportErr] = useState('');
 
-  // Background image upload
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -134,17 +133,17 @@ export default function ThemePanel() {
 
         {theme.bgMode === 'image' && (
           <>
-            <Row label="Image">
+            <Row label="Image / GIF">
               <div className="tp-imgrow">
                 <button className="tp-upload-btn hw-mono" onClick={() => fileRef.current?.click()}>
-                  {theme.bgImage ? 'Change Image' : 'Upload Image'}
+                  {theme.bgImage ? 'Change' : 'Upload Image / GIF'}
                 </button>
                 {theme.bgImage && (
                   <button className="tp-clear-btn hw-mono" onClick={() => set({ bgImage: '', bgMode: 'color' })}>
                     Remove
                   </button>
                 )}
-                <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} hidden />
+                <input ref={fileRef} type="file" accept="image/*,.gif" onChange={handleImageUpload} hidden />
               </div>
             </Row>
             {theme.bgImage && (

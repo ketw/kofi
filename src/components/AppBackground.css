@@ -6,24 +6,18 @@
   z-index: 0;
 }
 
-.app-bg-image {
+/* solid color — fills everything, set by --hw-bg */
+.app-bg-color {
   position: absolute;
-  inset: -20px; /* extra margin so blur doesn't show edges */
-  background-position: center;
-  background-repeat: no-repeat;
+  inset: 0;
+  background: var(--hw-bg);
 }
 
-.app-hero-art {
+/* image / gif layer sits on top of color */
+.app-bg-image {
   position: absolute;
-  top: -5%;
-  right: -3%;
-  width: 58%;
-  max-width: 1000px;
-  height: auto;
-  object-fit: contain;
-  mix-blend-mode: lighten;
-  user-select: none;
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity 0.3s;
+  inset: -20px; /* extra so blur doesn't show edges */
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform; /* hint for gif compositing */
 }

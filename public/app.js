@@ -69,15 +69,21 @@ let isTyping = false;
 let lastGroup = null; // { userId, el } for message grouping
 
 // ── Auth ──────────────────────────────────────────────────────────────────
-const savedUser = (() => { try { return JSON.parse(localStorage.getItem('kofi_user')); } catch { return null; } })();
-
-if (savedUser) {
-  // We can't re-auth without the password, so just go straight to login screen
-  // but pre-fill the name so returning users only have to type their password
-  showLogin(savedUser.name);
-} else {
+// On load: check for a valid session cookie first.
+// If valid → enter chat immediately (no login screen flash).
+// If not → show login.
+(async () => {
+  try {
+    const res = await fetch('/api/session');
+    if (res.ok) {
+      const profile = await res.json();
+      enterChat(profile);       // skip login screen entirely
+      return;
+    }
+  } catch {}
+  // No session or network error — show login
   showLogin();
-}
+})();
 
 function showLogin(prefillName = '') {
   $('login-screen').classList.remove('hidden');
@@ -106,7 +112,6 @@ async function doLogin() {
       body: JSON.stringify({ name, password }) });
     const data = await res.json();
     if (!res.ok) { $('login-error').textContent = data.error; return; }
-    localStorage.setItem('kofi_user', JSON.stringify({ id: data.id, name: data.name }));
     $('password-input').value = ''; // don't hold the password in DOM
     enterChat(data);
   } catch { $('login-error').textContent = 'Connection error'; }
@@ -433,7 +438,7 @@ function handleProfileUpdate(profile) {
   profileCache.set(profile.id, profile);
   if (profile.id === me.id) {
     me = profile;
-    localStorage.setItem('kofi_user', JSON.stringify({ id: me.id, name: me.name }));
+
     updateMyProfileBtn();
     refreshProfilePanel();
   }
@@ -1187,7 +1192,7 @@ async function saveProfileName() {
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
     profileCache.set(me.id, me);
-    localStorage.setItem('kofi_user', JSON.stringify({ id: me.id, name: me.name }));
+
     updateMyProfileBtn();
     refreshProfilePanel();
   } catch { $('pp-name-error').textContent = 'Failed to save'; }
@@ -1206,7 +1211,7 @@ async function switchToAlias(alias) {
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
     profileCache.set(me.id, me);
-    localStorage.setItem('kofi_user', JSON.stringify({ id: me.id, name: me.name }));
+
     updateMyProfileBtn();
     refreshProfilePanel();
     $('pp-name-input').value = me.name;

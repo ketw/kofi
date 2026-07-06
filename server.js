@@ -15,6 +15,40 @@ const wss    = new WebSocket.Server({ server });
 app.use(express.json({ limit: '4mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Cookie helpers ─────────────────────────────────────────────────────────
+// Minimal cookie parser — no dependency needed
+function parseCookies(req) {
+  const raw = req.headers.cookie || '';
+  return Object.fromEntries(raw.split(';').map(s => {
+    const [k, ...v] = s.trim().split('=');
+    return [k, decodeURIComponent(v.join('='))];
+  }).filter(([k]) => k));
+}
+
+function setSessionCookie(res, token) {
+  // HttpOnly prevents JS access; SameSite=Strict prevents CSRF
+  res.setHeader('Set-Cookie',
+    `kofi_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000`);
+}
+
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie',
+    `kofi_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
+}
+
+// ── Session token generator ────────────────────────────────────────────────
+function genToken() {
+  // 32 random bytes → 64-char hex
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues ? crypto.getRandomValues(bytes)
+    : require('crypto').randomFillSync(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const nodeCrypto = require('crypto');
+function genTokenNode() {
+  return nodeCrypto.randomBytes(32).toString('hex');
+}
+
 // ── Database ───────────────────────────────────────────────────────────────
 const DB_PATH = path.join(__dirname, 'chat.db');
 let db;
@@ -53,6 +87,12 @@ async function initDB() {
       type       TEXT NOT NULL,
       content    TEXT NOT NULL,
       file_meta  TEXT,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      token      TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
   `);
@@ -192,6 +232,25 @@ function socketIdForUser(userId) {
 // REST API
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── GET /api/session — resume session from cookie (no password needed) ─────
+app.get('/api/session', (req, res) => {
+  const token = parseCookies(req).kofi_session;
+  if (!token) return res.status(401).json({ error: 'No session' });
+  const row = dbGet('SELECT user_id FROM sessions WHERE token = ?', [token]);
+  if (!row) { clearSessionCookie(res); return res.status(401).json({ error: 'Session expired' }); }
+  const profile = getProfile(row.user_id);
+  if (!profile) { clearSessionCookie(res); return res.status(401).json({ error: 'User not found' }); }
+  res.json(profile);
+});
+
+// ── POST /api/logout — clear session cookie and delete token ──────────────
+app.post('/api/logout', (req, res) => {
+  const token = parseCookies(req).kofi_session;
+  if (token) db.run('DELETE FROM sessions WHERE token = ?', [token]);
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
+
 // ── POST /api/auth — login or register ────────────────────────────────────
 // Body: { name, password }
 //
@@ -220,17 +279,22 @@ app.post('/api/auth', async (req, res) => {
       // Legacy account with no password yet — set it now on first login
       const hash = bcrypt.hashSync(password, 10);
       db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, activeUser.id]);
+      const token = genTokenNode();
+      db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [token, activeUser.id, Date.now()]);
+      setSessionCookie(res, token);
       return res.json(getProfile(activeUser.id));
     }
     const ok = bcrypt.compareSync(password, activeUser.password_hash);
     if (!ok) return res.status(401).json({ error: 'Incorrect password' });
+    const token = genTokenNode();
+    db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [token, activeUser.id, Date.now()]);
+    setSessionCookie(res, token);
     return res.json(getProfile(activeUser.id));
   }
 
   // Check if name is an old alias belonging to someone else
   const aliasRow = dbGet('SELECT user_id FROM user_names WHERE name = ?', [trimmed]);
   if (aliasRow) {
-    // Name is taken as an old alias — tell them to use their active name
     return res.status(409).json({
       error: 'That name belongs to an existing account. Log in using your active name.',
     });
@@ -244,6 +308,9 @@ app.post('/api/auth', async (req, res) => {
   db.run('INSERT INTO users (id, uid, name, password_hash, avatar, created_at) VALUES (?, ?, ?, ?, NULL, ?)',
     [id, uid, trimmed, hash, now]);
   db.run('INSERT INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)', [id, trimmed, now]);
+  const token = genTokenNode();
+  db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [token, id, Date.now()]);
+  setSessionCookie(res, token);
   return res.json(getProfile(id));
 });
 
@@ -303,6 +370,12 @@ app.post('/api/profile', async (req, res) => {
     }
     db.run('UPDATE users SET password_hash = ? WHERE id = ?',
       [bcrypt.hashSync(newPassword, 10), userId]);
+    // Invalidate all existing sessions — everyone must log in again with new password
+    db.run('DELETE FROM sessions WHERE user_id = ?', [userId]);
+    // Issue a fresh session for the current request
+    const token = genTokenNode();
+    db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [token, userId, Date.now()]);
+    setSessionCookie(res, token);
   }
 
   const profile = getProfile(userId);

@@ -29,10 +29,14 @@ html, body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* hidden until JS mounts the correct screen — prevents login flash */
+  visibility: hidden;
 }
+body.ready { visibility: visible; }
 
 .hidden { display: none !important; }
 .screen { height: 100vh; }
+#root   { height: 100%; }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }

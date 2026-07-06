@@ -72,41 +72,42 @@ let lastGroup = null; // { userId, el } for message grouping
 const savedUser = (() => { try { return JSON.parse(localStorage.getItem('kofi_user')); } catch { return null; } })();
 
 if (savedUser) {
-  fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: savedUser.name }) })
-    .then(r => r.json())
-    .then(u => {
-      if (u.id) {
-        localStorage.setItem('kofi_user', JSON.stringify({ id: u.id, name: u.name }));
-        enterChat(u);
-      } else {
-        showLogin();
-      }
-    })
-    .catch(() => showLogin());
+  // We can't re-auth without the password, so just go straight to login screen
+  // but pre-fill the name so returning users only have to type their password
+  showLogin(savedUser.name);
 } else {
   showLogin();
 }
 
-function showLogin() {
+function showLogin(prefillName = '') {
   $('login-screen').classList.remove('hidden');
   $('chat-screen').classList.add('hidden');
-  $('name-input').focus();
+  if (prefillName) {
+    $('name-input').value = prefillName;
+    $('password-input').focus();
+  } else {
+    $('name-input').focus();
+  }
 }
 
 $('join-btn').addEventListener('click', doLogin);
-$('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+$('name-input').addEventListener('keydown',     e => { if (e.key === 'Enter') $('password-input').focus(); });
+$('password-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 async function doLogin() {
-  const name = $('name-input').value.trim();
-  if (!name) return;
+  const name     = $('name-input').value.trim();
+  const password = $('password-input').value;
+  if (!name)     return;
+  if (!password) { $('login-error').textContent = 'Password required'; return; }
   $('login-error').textContent = '';
   try {
-    const res = await fetch('/api/auth', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    const res  = await fetch('/api/auth', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, password }) });
     const data = await res.json();
     if (!res.ok) { $('login-error').textContent = data.error; return; }
     localStorage.setItem('kofi_user', JSON.stringify({ id: data.id, name: data.name }));
+    $('password-input').value = ''; // don't hold the password in DOM
     enterChat(data);
   } catch { $('login-error').textContent = 'Connection error'; }
 }
@@ -1107,6 +1108,7 @@ function initProfilePanel() {
   $('pp-name-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveProfileName(); });
   $('pp-avatar-input').addEventListener('change', handleAvatarUpload);
   $('pp-avatar-remove').addEventListener('click', removeAvatar);
+  $('pp-pass-save').addEventListener('click', savePassword);
 }
 
 function openProfilePanel() {
@@ -1115,7 +1117,10 @@ function openProfilePanel() {
   $('profile-backdrop').classList.remove('hidden');
   $('pp-name-input').value = me.name;
   $('pp-name-error').textContent = '';
-  $('pp-name-input').focus();
+  $('pp-pass-error').textContent = '';
+  $('pp-confirm-pass').value = '';
+  $('pp-cur-pass').value = '';
+  $('pp-new-pass').value = '';
 }
 
 function closeProfilePanel() {
@@ -1124,23 +1129,23 @@ function closeProfilePanel() {
 }
 
 function refreshProfilePanel() {
-  // Avatar preview
+  // Avatar
   const preview = $('pp-avatar-preview');
   applyAvatarToEl(preview, me);
   preview.style.background = me.avatar ? 'transparent' : userColor(me.id);
-
-  // Remove button visibility
   $('pp-avatar-remove').classList.toggle('hidden', !me.avatar);
 
+  // UID badge
+  $('pp-uid').textContent = me.uid ? `#${me.uid}` : '';
+
   // Aliases list
-  const list = $('pp-aliases-list');
+  const list    = $('pp-aliases-list');
   list.innerHTML = '';
-  const aliases = me.aliases || [me.name];
-  for (const alias of aliases) {
-    const row = document.createElement('div');
+  for (const alias of (me.aliases || [me.name])) {
+    const row  = document.createElement('div');
     row.className = 'pp-alias-row' + (alias === me.name ? ' active' : '');
 
-    const dot = document.createElement('div');
+    const dot  = document.createElement('div');
     dot.className = 'pp-alias-dot';
 
     const nameSpan = document.createElement('span');
@@ -1155,26 +1160,29 @@ function refreshProfilePanel() {
       badge.textContent = 'active';
       row.appendChild(badge);
     } else {
-      // Click to switch to this alias
       row.title = 'Switch to this name';
       row.style.cursor = 'pointer';
       row.addEventListener('click', () => switchToAlias(alias));
     }
-
     list.appendChild(row);
   }
 }
+
+// Get the confirmation password the user entered in the panel
+function getConfirmPass() { return $('pp-confirm-pass').value; }
 
 async function saveProfileName() {
   const newName = $('pp-name-input').value.trim();
   if (!newName || newName === me.name) { closeProfilePanel(); return; }
   $('pp-name-error').textContent = '';
 
+  const currentPassword = getConfirmPass();
+  if (!currentPassword) { $('pp-name-error').textContent = 'Enter your password to confirm'; return; }
+
   try {
-    const res = await fetch('/api/profile', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, name: newName }),
-    });
+    const res  = await fetch('/api/profile', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: me.id, currentPassword, name: newName }) });
     const data = await res.json();
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
@@ -1187,11 +1195,13 @@ async function saveProfileName() {
 
 async function switchToAlias(alias) {
   $('pp-name-error').textContent = '';
+  const currentPassword = getConfirmPass();
+  if (!currentPassword) { $('pp-name-error').textContent = 'Enter your password to confirm'; return; }
+
   try {
-    const res = await fetch('/api/profile', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, name: alias }),
-    });
+    const res  = await fetch('/api/profile', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: me.id, currentPassword, name: alias }) });
     const data = await res.json();
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
@@ -1203,23 +1213,48 @@ async function switchToAlias(alias) {
   } catch { $('pp-name-error').textContent = 'Failed to switch'; }
 }
 
+async function savePassword() {
+  const currentPassword = $('pp-cur-pass').value;
+  const newPassword     = $('pp-new-pass').value;
+  $('pp-pass-error').textContent = '';
+
+  if (!currentPassword) { $('pp-pass-error').textContent = 'Enter your current password'; return; }
+  if (!newPassword || newPassword.length < 4) {
+    $('pp-pass-error').textContent = 'New password must be at least 4 characters'; return;
+  }
+
+  try {
+    const res  = await fetch('/api/profile', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: me.id, currentPassword, newPassword }) });
+    const data = await res.json();
+    if (!res.ok) { $('pp-pass-error').textContent = data.error; return; }
+    $('pp-cur-pass').value = '';
+    $('pp-new-pass').value = '';
+    $('pp-pass-error').textContent = '';
+    $('pp-pass-error').style.color = 'var(--accent)';
+    $('pp-pass-error').textContent = 'Password updated';
+    setTimeout(() => { $('pp-pass-error').textContent = ''; }, 2000);
+  } catch { $('pp-pass-error').textContent = 'Failed to update'; }
+}
+
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) return;
-  // Resize to max 256×256 via canvas before storing as base64
+  if (!file || !file.type.startsWith('image/')) return;
+  const currentPassword = getConfirmPass();
+  if (!currentPassword) { alert('Enter your password in the confirmation field first'); return; }
+
   const reader = new FileReader();
   reader.onload = ev => {
     const img = new Image();
     img.onload = () => {
       const MAX = 256;
       const canvas = document.createElement('canvas');
-      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
-      canvas.width = Math.round(img.width * scale);
+      const scale  = Math.min(MAX / img.width, MAX / img.height, 1);
+      canvas.width  = Math.round(img.width  * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      uploadAvatar(dataUrl);
+      uploadAvatar(canvas.toDataURL('image/jpeg', 0.85), currentPassword);
     };
     img.src = ev.target.result;
   };
@@ -1227,12 +1262,11 @@ function handleAvatarUpload(e) {
   e.target.value = '';
 }
 
-async function uploadAvatar(dataUrl) {
+async function uploadAvatar(dataUrl, currentPassword) {
   try {
-    const res = await fetch('/api/profile', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, avatar: dataUrl }),
-    });
+    const res  = await fetch('/api/profile', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: me.id, currentPassword, avatar: dataUrl }) });
     const data = await res.json();
     if (!res.ok) return;
     me = data;
@@ -1243,11 +1277,12 @@ async function uploadAvatar(dataUrl) {
 }
 
 async function removeAvatar() {
+  const currentPassword = getConfirmPass();
+  if (!currentPassword) { alert('Enter your password in the confirmation field first'); return; }
   try {
-    const res = await fetch('/api/profile', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, avatar: null }),
-    });
+    const res  = await fetch('/api/profile', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: me.id, currentPassword, avatar: null }) });
     const data = await res.json();
     if (!res.ok) return;
     me = data;

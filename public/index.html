@@ -11,7 +11,8 @@
   <!-- ── Login ─────────────────────────────────────────────────── -->
   <div id="login-screen" class="screen">
     <div class="login-box">
-      <input id="name-input" type="text" placeholder="your name" maxlength="32" autocomplete="off" spellcheck="false" />
+      <input id="name-input"     type="text"     placeholder="your name"     maxlength="32" autocomplete="off"       spellcheck="false" />
+      <input id="password-input" type="password" placeholder="password"      maxlength="128" autocomplete="current-password" />
       <button id="join-btn">join</button>
       <span id="login-error" class="error"></span>
     </div>
@@ -23,13 +24,14 @@
     <!-- Floating profile blob (top-right) -->
     <button id="my-profile-btn" title="Your profile" aria-label="Open profile"></button>
 
-    <!-- Profile panel (slide-in from right) -->
+    <!-- Profile panel -->
     <div id="profile-panel" class="hidden" role="dialog" aria-label="Profile settings">
       <div class="pp-header">
-        <span class="pp-title">Your Profile</span>
+        <span class="pp-title">profile</span>
         <button class="pp-close" id="pp-close-btn" aria-label="Close">✕</button>
       </div>
 
+      <!-- Avatar -->
       <div class="pp-avatar-section">
         <div class="pp-avatar-wrap">
           <div id="pp-avatar-preview" class="pp-avatar-preview"></div>
@@ -40,28 +42,47 @@
             <input id="pp-avatar-input" type="file" accept="image/*" hidden />
           </label>
         </div>
-        <button id="pp-avatar-remove" class="pp-avatar-remove hidden">Remove photo</button>
+        <button id="pp-avatar-remove" class="pp-avatar-remove hidden">remove photo</button>
+        <!-- Permanent UID badge -->
+        <div id="pp-uid" class="pp-uid"></div>
       </div>
 
+      <!-- Display name -->
       <div class="pp-field-group">
-        <label class="pp-label">Display name</label>
+        <label class="pp-label">display name</label>
         <div class="pp-name-row">
-          <input id="pp-name-input" type="text" class="pp-input" maxlength="32" spellcheck="false" placeholder="Enter a name" />
-          <button id="pp-name-save" class="pp-btn-primary">Save</button>
+          <input id="pp-name-input" type="text" class="pp-input" maxlength="32" spellcheck="false" placeholder="name" />
+          <button id="pp-name-save" class="pp-btn-primary">save</button>
         </div>
         <span id="pp-name-error" class="pp-error"></span>
       </div>
 
+      <!-- Aliases -->
       <div class="pp-field-group" id="pp-aliases-group">
-        <label class="pp-label">Your names <span class="pp-label-sub">— all permanently yours</span></label>
+        <label class="pp-label">your names <span class="pp-label-sub">— permanently claimed</span></label>
         <div id="pp-aliases-list" class="pp-aliases-list"></div>
+      </div>
+
+      <!-- Password change -->
+      <div class="pp-field-group">
+        <label class="pp-label">change password</label>
+        <input id="pp-cur-pass"  type="password" class="pp-input" placeholder="current password"  autocomplete="current-password" />
+        <input id="pp-new-pass"  type="password" class="pp-input" placeholder="new password (min 4)"  autocomplete="new-password" />
+        <button id="pp-pass-save" class="pp-btn-primary" style="align-self:flex-start">update</button>
+        <span id="pp-pass-error" class="pp-error"></span>
+      </div>
+
+      <!-- Current password confirmation (used for name/avatar changes too) -->
+      <div class="pp-field-group" id="pp-confirm-group">
+        <label class="pp-label">confirm with password <span class="pp-label-sub">— required for changes</span></label>
+        <input id="pp-confirm-pass" type="password" class="pp-input" placeholder="your password" autocomplete="current-password" />
       </div>
     </div>
 
     <!-- Panel backdrop -->
     <div id="profile-backdrop" class="hidden"></div>
 
-    <!-- Message feed -->
+    <!-- Messages -->
     <div id="messages"></div>
 
     <!-- Composer area -->
@@ -76,7 +97,7 @@
           <input id="file-input" type="file" multiple hidden />
         </label>
         <div id="file-previews"></div>
-        <textarea id="msg-input" placeholder="Message #general" rows="1"></textarea>
+        <textarea id="msg-input" placeholder="message" rows="1"></textarea>
         <button id="send-btn" title="Send (Enter)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>

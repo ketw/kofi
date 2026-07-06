@@ -249,6 +249,18 @@ html, body {
 }
 .pp-avatar-remove:hover { color: var(--accent); }
 
+/* Permanent UID badge */
+.pp-uid {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  padding: 0.15rem 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  user-select: all;
+}
+
 .pp-field-group {
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);

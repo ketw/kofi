@@ -1,17 +1,18 @@
-const express = require('express');
-const http = require('http');
+const express  = require('express');
+const http     = require('http');
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
+const bcrypt   = require('bcryptjs');
+const path     = require('path');
+const os       = require('os');
+const fs       = require('fs');
 
 // ── Setup ──────────────────────────────────────────────────────────────────
-const app = express();
+const app    = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss    = new WebSocket.Server({ server });
 
-app.use(express.json({ limit: '4mb' })); // avatar images can be ~1-2 MB as base64
+app.use(express.json({ limit: '4mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Database ───────────────────────────────────────────────────────────────
@@ -22,18 +23,19 @@ async function initDB() {
   const initSqlJs = require('sql.js');
   const SQL = await initSqlJs();
 
-  if (fs.existsSync(DB_PATH)) {
-    db = new SQL.Database(fs.readFileSync(DB_PATH));
-  } else {
-    db = new SQL.Database();
-  }
+  db = fs.existsSync(DB_PATH)
+    ? new SQL.Database(fs.readFileSync(DB_PATH))
+    : new SQL.Database();
 
-  // Core tables — always safe to run
+  // Core tables
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id         TEXT PRIMARY KEY,
-      name       TEXT NOT NULL,
-      created_at INTEGER NOT NULL
+      id            TEXT PRIMARY KEY,
+      uid           TEXT UNIQUE NOT NULL,
+      name          TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      avatar        TEXT,
+      created_at    INTEGER NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS user_names (
@@ -55,38 +57,50 @@ async function initDB() {
     );
   `);
 
-  // ── Schema migrations (safe to re-run) ──────────────────────────────────
-  // Add avatar column to users if it doesn't exist yet
-  const userCols = dbAll(`PRAGMA table_info(users)`).map(c => c.name);
+  // ── Migrations (safe to re-run on every start) ─────────────────────────
+  const userCols = dbAll('PRAGMA table_info(users)').map(c => c.name);
+
   if (!userCols.includes('avatar')) {
     db.run('ALTER TABLE users ADD COLUMN avatar TEXT');
-    console.log('  Migration: added users.avatar column');
+    console.log('  migration: added users.avatar');
+  }
+  if (!userCols.includes('uid')) {
+    db.run('ALTER TABLE users ADD COLUMN uid TEXT');
+    // Back-fill uid for existing accounts
+    const rows = dbAll('SELECT id FROM users WHERE uid IS NULL');
+    for (const r of rows) {
+      db.run('UPDATE users SET uid = ? WHERE id = ?', [genUid(), r.id]);
+    }
+    // Now add the unique index — SQLite can't enforce NOT NULL retroactively
+    // but every row now has a value so this is safe
+    try { db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uid ON users(uid)'); } catch {}
+    console.log(`  migration: added users.uid, back-filled ${rows.length} row(s)`);
+  }
+  if (!userCols.includes('password_hash')) {
+    db.run('ALTER TABLE users ADD COLUMN password_hash TEXT');
+    // Existing accounts get no password — they'll be prompted to set one on next login
+    console.log('  migration: added users.password_hash');
   }
 
-  // Remove old UNIQUE constraint on users.name if it existed (no longer needed —
-  // uniqueness is now enforced by user_names). SQLite can't drop constraints, but
-  // the INSERT OR IGNORE on user_names handles the enforcement going forward.
-
-  // Populate user_names from existing users rows (idempotent)
-  const existing = dbAll('SELECT id, name, created_at FROM users');
-  for (const u of existing) {
-    const has = dbGet('SELECT 1 FROM user_names WHERE user_id = ? AND name = ?', [u.id, u.name]);
-    if (!has) db.run('INSERT OR IGNORE INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)', [u.id, u.name, u.created_at]);
+  // Populate user_names from users (idempotent)
+  for (const u of dbAll('SELECT id, name, created_at FROM users')) {
+    db.run('INSERT OR IGNORE INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)',
+      [u.id, u.name, u.created_at]);
   }
 
+  // Persist to disk
   let dirty = false;
   const origRun = db.run.bind(db);
   db.run = (...args) => { dirty = true; return origRun(...args); };
-
   setInterval(() => {
     if (dirty) { dirty = false; fs.writeFileSync(DB_PATH, Buffer.from(db.export())); }
   }, 5000);
-
   process.on('exit', () => fs.writeFileSync(DB_PATH, Buffer.from(db.export())));
-  process.on('SIGINT', () => process.exit(0));
+  process.on('SIGINT',  () => process.exit(0));
   process.on('SIGTERM', () => process.exit(0));
 }
 
+// ── DB helpers ─────────────────────────────────────────────────────────────
 function dbAll(sql, params = []) {
   const stmt = db.prepare(sql);
   stmt.bind(params);
@@ -97,26 +111,45 @@ function dbAll(sql, params = []) {
 }
 function dbGet(sql, params = []) { return dbAll(sql, params)[0] || null; }
 
+// ── UID generator — short 4-char hex, collision-checked ───────────────────
+function genUid() {
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    const uid = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0');
+    if (!dbGet('SELECT 1 FROM users WHERE uid = ?', [uid])) return uid;
+  }
+  // Fallback to 8-char if somehow exhausted (won't happen in practice)
+  return Math.random().toString(16).slice(2, 10);
+}
+
 // ── File registry ──────────────────────────────────────────────────────────
 const fileRegistry = new Map();
 
 function loadFileRegistry() {
-  const rows = dbAll(`SELECT file_meta, user_id FROM messages WHERE type = 'file' AND file_meta IS NOT NULL`);
+  const rows = dbAll(`SELECT file_meta, user_id FROM messages WHERE type='file' AND file_meta IS NOT NULL`);
   for (const row of rows) {
     try {
-      const meta = JSON.parse(row.file_meta);
-      if (meta.fileId) fileRegistry.set(meta.fileId, { userId: row.user_id, name: meta.name, size: meta.size, mimeType: meta.mimeType });
+      const m = JSON.parse(row.file_meta);
+      if (m.fileId) fileRegistry.set(m.fileId, { userId: row.user_id, name: m.name, size: m.size, mimeType: m.mimeType });
     } catch {}
   }
-  console.log(`  Loaded ${fileRegistry.size} file(s) into registry from history`);
+  console.log(`  loaded ${fileRegistry.size} file(s) into registry`);
 }
 
-// ── Helpers for full profile object ───────────────────────────────────────
+// ── Profile helper ─────────────────────────────────────────────────────────
 function getProfile(userId) {
-  const user = dbGet('SELECT id, name, avatar FROM users WHERE id = ?', [userId]);
-  if (!user) return null;
-  const names = dbAll('SELECT name, claimed_at FROM user_names WHERE user_id = ? ORDER BY claimed_at ASC', [userId]);
-  return { id: user.id, name: user.name, avatar: user.avatar || null, aliases: names.map(n => n.name) };
+  const u = dbGet('SELECT id, uid, name, avatar FROM users WHERE id = ?', [userId]);
+  if (!u) return null;
+  const aliases = dbAll('SELECT name FROM user_names WHERE user_id = ? ORDER BY claimed_at ASC', [userId]).map(r => r.name);
+  return { id: u.id, uid: u.uid, name: u.name, avatar: u.avatar || null, aliases };
+}
+
+// ── Validate name string ───────────────────────────────────────────────────
+function validateName(raw) {
+  if (!raw || typeof raw !== 'string') return 'Name required';
+  const s = raw.trim().slice(0, 32);
+  if (!s) return 'Name cannot be empty';
+  if (!/^[a-zA-Z0-9_\- ]+$/.test(s)) return 'Letters, numbers, spaces, hyphens and underscores only';
+  return null; // ok
 }
 
 // ── Connected clients ──────────────────────────────────────────────────────
@@ -132,127 +165,158 @@ function broadcastAll(data) { broadcast(data, null); }
 
 function onlineUsers() {
   const seen = new Set();
-  const result = [];
+  const out  = [];
   for (const c of clients.values()) {
     if (c.userId && !seen.has(c.userId)) {
       seen.add(c.userId);
-      const profile = getProfile(c.userId);
-      result.push({ id: c.userId, name: c.userName, avatar: profile ? profile.avatar : null });
+      const p = getProfile(c.userId);
+      out.push({ id: c.userId, name: c.userName, avatar: p ? p.avatar : null });
     }
   }
-  return result;
+  return out;
 }
 
 function wsForUser(userId) {
-  for (const [ws, client] of clients) {
-    if (client.userId === userId && ws.readyState === WebSocket.OPEN) return ws;
-  }
+  for (const [ws, c] of clients)
+    if (c.userId === userId && ws.readyState === WebSocket.OPEN) return ws;
   return null;
 }
 
 function socketIdForUser(userId) {
-  for (const [, client] of clients) {
-    if (client.userId === userId) return client.socketId;
-  }
+  for (const [, c] of clients)
+    if (c.userId === userId) return c.socketId;
   return null;
 }
 
-// ── REST API ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// REST API
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Auth: login or register by name
-// Name lookup checks ALL claimed names (past + present), so each name is unique forever
-app.post('/api/auth', (req, res) => {
-  const { name } = req.body;
-  if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Name required' });
+// ── POST /api/auth — login or register ────────────────────────────────────
+// Body: { name, password }
+//
+// Rules:
+//  1. Name must only match users.name (the active name), never old aliases.
+//  2. If name is unclaimed → new account, password required (≥4 chars).
+//  3. If name matches an existing account's active name → check password.
+//  4. If name is an old alias (not active) → reject with clear error.
+app.post('/api/auth', async (req, res) => {
+  const { name, password } = req.body;
+
+  const nameErr = validateName(name);
+  if (nameErr) return res.status(400).json({ error: nameErr });
   const trimmed = name.trim().slice(0, 32);
-  if (!trimmed) return res.status(400).json({ error: 'Name cannot be empty' });
-  if (!/^[a-zA-Z0-9_\- ]+$/.test(trimmed)) {
-    return res.status(400).json({ error: 'Name can only contain letters, numbers, spaces, hyphens, and underscores' });
+
+  if (!password || typeof password !== 'string' || password.length < 4) {
+    return res.status(400).json({ error: 'Password must be at least 4 characters' });
   }
 
-  // Find who owns this name (if anyone)
-  const nameRow = dbGet('SELECT user_id FROM user_names WHERE name = ?', [trimmed]);
+  // Check if this name is anyone's ACTIVE name
+  const activeUser = dbGet('SELECT * FROM users WHERE name = ?', [trimmed]);
 
-  if (nameRow) {
-    // Name is claimed — log in as that user, switch active name to this one
-    const userId = nameRow.user_id;
-    db.run('UPDATE users SET name = ? WHERE id = ?', [trimmed, userId]);
-    const profile = getProfile(userId);
-    return res.json(profile);
+  if (activeUser) {
+    // Name matches an active account — verify password
+    if (!activeUser.password_hash) {
+      // Legacy account with no password yet — set it now on first login
+      const hash = bcrypt.hashSync(password, 10);
+      db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, activeUser.id]);
+      return res.json(getProfile(activeUser.id));
+    }
+    const ok = bcrypt.compareSync(password, activeUser.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Incorrect password' });
+    return res.json(getProfile(activeUser.id));
   }
 
-  // Brand new name — create a fresh user
-  const id = uuidv4();
+  // Check if name is an old alias belonging to someone else
+  const aliasRow = dbGet('SELECT user_id FROM user_names WHERE name = ?', [trimmed]);
+  if (aliasRow) {
+    // Name is taken as an old alias — tell them to use their active name
+    return res.status(409).json({
+      error: 'That name belongs to an existing account. Log in using your active name.',
+    });
+  }
+
+  // Completely new name → create account
+  const id  = uuidv4();
+  const uid = genUid();
   const now = Date.now();
-  db.run('INSERT INTO users (id, name, avatar, created_at) VALUES (?, ?, NULL, ?)', [id, trimmed, now]);
+  const hash = bcrypt.hashSync(password, 10);
+  db.run('INSERT INTO users (id, uid, name, password_hash, avatar, created_at) VALUES (?, ?, ?, ?, NULL, ?)',
+    [id, uid, trimmed, hash, now]);
   db.run('INSERT INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)', [id, trimmed, now]);
   return res.json(getProfile(id));
 });
 
-// Get profile of any user
+// ── GET /api/profile/:userId ───────────────────────────────────────────────
 app.get('/api/profile/:userId', (req, res) => {
-  const profile = getProfile(req.params.userId);
-  if (!profile) return res.status(404).json({ error: 'User not found' });
-  res.json(profile);
+  const p = getProfile(req.params.userId);
+  if (!p) return res.status(404).json({ error: 'Not found' });
+  res.json(p);
 });
 
-// Update own profile (name switch/claim + avatar)
-app.post('/api/profile', (req, res) => {
-  const { userId, name, avatar } = req.body;
+// ── POST /api/profile — update name / avatar / password ───────────────────
+// Body: { userId, currentPassword, name?, avatar?, newPassword? }
+app.post('/api/profile', async (req, res) => {
+  const { userId, currentPassword, name, avatar, newPassword } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   const user = dbGet('SELECT * FROM users WHERE id = ?', [userId]);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
-  let newName = user.name;
-
-  if (name && name !== user.name) {
-    const trimmed = name.trim().slice(0, 32);
-    if (!trimmed) return res.status(400).json({ error: 'Name cannot be empty' });
-    if (!/^[a-zA-Z0-9_\- ]+$/.test(trimmed)) {
-      return res.status(400).json({ error: 'Name can only contain letters, numbers, spaces, hyphens, and underscores' });
-    }
-
-    // Check if the name is free or already owned by this user
-    const existing = dbGet('SELECT user_id FROM user_names WHERE name = ?', [trimmed]);
-    if (existing && existing.user_id !== userId) {
-      return res.status(409).json({ error: 'That name is already taken by someone else' });
-    }
-
-    // Claim if new
-    if (!existing) {
-      db.run('INSERT INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)', [userId, trimmed, Date.now()]);
-    }
-
-    db.run('UPDATE users SET name = ? WHERE id = ?', [trimmed, userId]);
-    newName = trimmed;
-
-    // Update active client session name
-    for (const [, client] of clients) {
-      if (client.userId === userId) client.userName = trimmed;
+  // All profile mutations require the current password
+  if (user.password_hash) {
+    if (!currentPassword) return res.status(401).json({ error: 'Current password required' });
+    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect password' });
     }
   }
 
+  // ── Name change / claim ────────────────────────────────────────────────
+  if (name !== undefined && name !== user.name) {
+    const nameErr = validateName(name);
+    if (nameErr) return res.status(400).json({ error: nameErr });
+    const trimmed = name.trim().slice(0, 32);
+
+    const existing = dbGet('SELECT user_id FROM user_names WHERE name = ?', [trimmed]);
+    if (existing && existing.user_id !== userId) {
+      return res.status(409).json({ error: 'That name is already taken' });
+    }
+    if (!existing) {
+      db.run('INSERT INTO user_names (user_id, name, claimed_at) VALUES (?, ?, ?)',
+        [userId, trimmed, Date.now()]);
+    }
+    db.run('UPDATE users SET name = ? WHERE id = ?', [trimmed, userId]);
+    for (const [, c] of clients) {
+      if (c.userId === userId) c.userName = trimmed;
+    }
+  }
+
+  // ── Avatar ─────────────────────────────────────────────────────────────
   if (avatar !== undefined) {
-    // avatar is a base64 data URL or null to clear
     db.run('UPDATE users SET avatar = ? WHERE id = ?', [avatar || null, userId]);
   }
 
+  // ── Password change ────────────────────────────────────────────────────
+  if (newPassword !== undefined) {
+    if (typeof newPassword !== 'string' || newPassword.length < 4) {
+      return res.status(400).json({ error: 'New password must be at least 4 characters' });
+    }
+    db.run('UPDATE users SET password_hash = ? WHERE id = ?',
+      [bcrypt.hashSync(newPassword, 10), userId]);
+  }
+
   const profile = getProfile(userId);
-
-  // Broadcast profile change to everyone
   broadcastAll({ type: 'profile_update', profile });
-
   res.json(profile);
 });
 
-// Message history
+// ── GET /api/messages ──────────────────────────────────────────────────────
 app.get('/api/messages', (req, res) => {
   const rows = dbAll('SELECT * FROM messages ORDER BY created_at DESC LIMIT 100').reverse();
   res.json(rows.map(r => {
     const parsed = r.file_meta ? JSON.parse(r.file_meta) : null;
     let uploaderSocketId = null;
-    if (parsed && parsed.fileId) {
+    if (parsed?.fileId) {
       const reg = fileRegistry.get(parsed.fileId);
       if (reg) uploaderSocketId = socketIdForUser(reg.userId) || null;
     }
@@ -260,7 +324,9 @@ app.get('/api/messages', (req, res) => {
   }));
 });
 
-// ── WebSocket handler ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// WebSocket
+// ═══════════════════════════════════════════════════════════════════════════
 wss.on('connection', (ws) => {
   const socketId = uuidv4();
   clients.set(ws, { socketId, userId: null, userName: null });
@@ -275,14 +341,12 @@ wss.on('connection', (ws) => {
       case 'join': {
         const user = dbGet('SELECT * FROM users WHERE id = ?', [msg.userId]);
         if (!user) { ws.send(JSON.stringify({ type: 'error', message: 'Unknown user' })); return; }
-        client.userId = user.id;
+        client.userId   = user.id;
         client.userName = user.name;
         ws.send(JSON.stringify({ type: 'welcome', socketId, users: onlineUsers() }));
         broadcast({ type: 'user_joined', user: { id: user.id, name: user.name }, users: onlineUsers() }, ws);
-        const myFileIds = [];
-        for (const [fid, meta] of fileRegistry) {
-          if (meta.userId === user.id) myFileIds.push(fid);
-        }
+        const myFileIds = [...fileRegistry.entries()]
+          .filter(([, m]) => m.userId === user.id).map(([fid]) => fid);
         if (myFileIds.length) ws.send(JSON.stringify({ type: 'rehost_files', fileIds: myFileIds }));
         broadcastAll({ type: 'uploader_online', userId: user.id, socketId });
         break;
@@ -292,8 +356,7 @@ wss.on('connection', (ws) => {
         if (!client.userId) return;
         const text = (msg.content || '').toString().trim().slice(0, 4000);
         if (!text) return;
-        const id = uuidv4();
-        const now = Date.now();
+        const id = uuidv4(), now = Date.now();
         db.run('INSERT INTO messages (id, user_id, user_name, type, content, file_meta, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [id, client.userId, client.userName, 'text', text, null, now]);
         broadcastAll({ type: 'message', id, userId: client.userId, userName: client.userName,
@@ -307,8 +370,7 @@ wss.on('connection', (ws) => {
         if (!fileId || !name) return;
         fileRegistry.set(fileId, { userId: client.userId, name, size, mimeType });
         if (!msg.reannounce) {
-          const id = uuidv4();
-          const now = Date.now();
+          const id = uuidv4(), now = Date.now();
           db.run('INSERT INTO messages (id, user_id, user_name, type, content, file_meta, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [id, client.userId, client.userName, 'file', name, JSON.stringify({ fileId, name, size, mimeType }), now]);
           broadcastAll({ type: 'message', id, userId: client.userId, userName: client.userName,
@@ -333,13 +395,11 @@ wss.on('connection', (ws) => {
 
       case 'file_chunk': {
         const { requestId, requesterSocketId, chunk, done, error } = msg;
-        let requesterWs = null;
-        for (const [oWs, oClient] of clients) {
-          if (oClient.socketId === requesterSocketId) { requesterWs = oWs; break; }
-        }
-        if (requesterWs && requesterWs.readyState === WebSocket.OPEN) {
-          requesterWs.send(JSON.stringify({ type: 'file_chunk', requestId, chunk, done, error }));
-        }
+        let rWs = null;
+        for (const [oWs, oC] of clients)
+          if (oC.socketId === requesterSocketId) { rWs = oWs; break; }
+        if (rWs?.readyState === WebSocket.OPEN)
+          rWs.send(JSON.stringify({ type: 'file_chunk', requestId, chunk, done, error }));
         break;
       }
 
@@ -352,11 +412,9 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    const client = clients.get(ws);
+    const c = clients.get(ws);
     clients.delete(ws);
-    if (client && client.userId) {
-      broadcast({ type: 'user_left', userId: client.userId, userName: client.userName, users: onlineUsers() });
-    }
+    if (c?.userId) broadcast({ type: 'user_left', userId: c.userId, userName: c.userName, users: onlineUsers() });
   });
 });
 
@@ -366,16 +424,13 @@ const PORT = process.env.PORT || 3000;
 initDB().then(() => {
   loadFileRegistry();
   server.listen(PORT, '0.0.0.0', () => {
-    const interfaces = os.networkInterfaces();
+    const ifaces = os.networkInterfaces();
     console.log('\n köfi is running!\n');
     console.log(`   Local:   http://localhost:${PORT}`);
-    for (const [, addrs] of Object.entries(interfaces)) {
-      for (const addr of addrs) {
-        if (addr.family === 'IPv4' && !addr.internal) {
-          console.log(`   Network: http://${addr.address}:${PORT}  ← share this with others on your network`);
-        }
-      }
-    }
+    for (const addrs of Object.values(ifaces))
+      for (const a of addrs)
+        if (a.family === 'IPv4' && !a.internal)
+          console.log(`   Network: http://${a.address}:${PORT}`);
     console.log('');
   });
 }).catch(err => { console.error('Failed to init DB:', err); process.exit(1); });

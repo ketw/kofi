@@ -322,21 +322,23 @@ app.get('/api/profile/:userId', (req, res) => {
 });
 
 // ── POST /api/profile — update name / avatar / password ───────────────────
-// Body: { userId, currentPassword, name?, avatar?, newPassword? }
+// Body: { userId, currentPassword?, name?, avatar?, newPassword? }
+// - name and avatar changes: session cookie is sufficient proof of identity
+// - newPassword: requires currentPassword to confirm
 app.post('/api/profile', async (req, res) => {
   const { userId, currentPassword, name, avatar, newPassword } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
+  // Verify the request carries a valid session for this userId
+  const token = parseCookies(req).kofi_session;
+  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+  const sessionRow = dbGet('SELECT user_id FROM sessions WHERE token = ?', [token]);
+  if (!sessionRow || sessionRow.user_id !== userId) {
+    return res.status(401).json({ error: 'Session does not match user' });
+  }
+
   const user = dbGet('SELECT * FROM users WHERE id = ?', [userId]);
   if (!user) return res.status(404).json({ error: 'User not found' });
-
-  // All profile mutations require the current password
-  if (user.password_hash) {
-    if (!currentPassword) return res.status(401).json({ error: 'Current password required' });
-    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
-      return res.status(401).json({ error: 'Incorrect password' });
-    }
-  }
 
   // ── Name change / claim ────────────────────────────────────────────────
   if (name !== undefined && name !== user.name) {
@@ -363,19 +365,25 @@ app.post('/api/profile', async (req, res) => {
     db.run('UPDATE users SET avatar = ? WHERE id = ?', [avatar || null, userId]);
   }
 
-  // ── Password change ────────────────────────────────────────────────────
+  // ── Password change — requires current password ───────────────────────
   if (newPassword !== undefined) {
+    if (!user.password_hash || !currentPassword) {
+      return res.status(401).json({ error: 'Current password required to set a new one' });
+    }
+    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
     if (typeof newPassword !== 'string' || newPassword.length < 4) {
       return res.status(400).json({ error: 'New password must be at least 4 characters' });
     }
     db.run('UPDATE users SET password_hash = ? WHERE id = ?',
       [bcrypt.hashSync(newPassword, 10), userId]);
-    // Invalidate all existing sessions — everyone must log in again with new password
+    // Invalidate all existing sessions — force re-login with new password
     db.run('DELETE FROM sessions WHERE user_id = ?', [userId]);
-    // Issue a fresh session for the current request
-    const token = genTokenNode();
-    db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [token, userId, Date.now()]);
-    setSessionCookie(res, token);
+    // Issue a fresh session for the person making this request
+    const newToken = genTokenNode();
+    db.run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)', [newToken, userId, Date.now()]);
+    setSessionCookie(res, newToken);
   }
 
   const profile = getProfile(userId);

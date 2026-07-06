@@ -1123,7 +1123,6 @@ function openProfilePanel() {
   $('pp-name-input').value = me.name;
   $('pp-name-error').textContent = '';
   $('pp-pass-error').textContent = '';
-  $('pp-confirm-pass').value = '';
   $('pp-cur-pass').value = '';
   $('pp-new-pass').value = '';
 }
@@ -1173,26 +1172,21 @@ function refreshProfilePanel() {
   }
 }
 
-// Get the confirmation password the user entered in the panel
-function getConfirmPass() { return $('pp-confirm-pass').value; }
+// No confirmation password needed for name/avatar — session cookie is proof of identity.
+// Only password changes require the current password.
 
 async function saveProfileName() {
   const newName = $('pp-name-input').value.trim();
   if (!newName || newName === me.name) { closeProfilePanel(); return; }
   $('pp-name-error').textContent = '';
-
-  const currentPassword = getConfirmPass();
-  if (!currentPassword) { $('pp-name-error').textContent = 'Enter your password to confirm'; return; }
-
   try {
     const res  = await fetch('/api/profile', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, currentPassword, name: newName }) });
+      body: JSON.stringify({ userId: me.id, name: newName }) });
     const data = await res.json();
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
     profileCache.set(me.id, me);
-
     updateMyProfileBtn();
     refreshProfilePanel();
   } catch { $('pp-name-error').textContent = 'Failed to save'; }
@@ -1200,18 +1194,14 @@ async function saveProfileName() {
 
 async function switchToAlias(alias) {
   $('pp-name-error').textContent = '';
-  const currentPassword = getConfirmPass();
-  if (!currentPassword) { $('pp-name-error').textContent = 'Enter your password to confirm'; return; }
-
   try {
     const res  = await fetch('/api/profile', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, currentPassword, name: alias }) });
+      body: JSON.stringify({ userId: me.id, name: alias }) });
     const data = await res.json();
     if (!res.ok) { $('pp-name-error').textContent = data.error; return; }
     me = data;
     profileCache.set(me.id, me);
-
     updateMyProfileBtn();
     refreshProfilePanel();
     $('pp-name-input').value = me.name;
@@ -1222,12 +1212,10 @@ async function savePassword() {
   const currentPassword = $('pp-cur-pass').value;
   const newPassword     = $('pp-new-pass').value;
   $('pp-pass-error').textContent = '';
-
   if (!currentPassword) { $('pp-pass-error').textContent = 'Enter your current password'; return; }
   if (!newPassword || newPassword.length < 4) {
     $('pp-pass-error').textContent = 'New password must be at least 4 characters'; return;
   }
-
   try {
     const res  = await fetch('/api/profile', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1236,19 +1224,15 @@ async function savePassword() {
     if (!res.ok) { $('pp-pass-error').textContent = data.error; return; }
     $('pp-cur-pass').value = '';
     $('pp-new-pass').value = '';
-    $('pp-pass-error').textContent = '';
-    $('pp-pass-error').style.color = 'var(--accent)';
+    $('pp-pass-error').style.color = '#4ade80';
     $('pp-pass-error').textContent = 'Password updated';
-    setTimeout(() => { $('pp-pass-error').textContent = ''; }, 2000);
+    setTimeout(() => { $('pp-pass-error').textContent = ''; $('pp-pass-error').style.color = ''; }, 2500);
   } catch { $('pp-pass-error').textContent = 'Failed to update'; }
 }
 
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file || !file.type.startsWith('image/')) return;
-  const currentPassword = getConfirmPass();
-  if (!currentPassword) { alert('Enter your password in the confirmation field first'); return; }
-
   const reader = new FileReader();
   reader.onload = ev => {
     const img = new Image();
@@ -1259,7 +1243,7 @@ function handleAvatarUpload(e) {
       canvas.width  = Math.round(img.width  * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      uploadAvatar(canvas.toDataURL('image/jpeg', 0.85), currentPassword);
+      uploadAvatar(canvas.toDataURL('image/jpeg', 0.85));
     };
     img.src = ev.target.result;
   };
@@ -1267,11 +1251,11 @@ function handleAvatarUpload(e) {
   e.target.value = '';
 }
 
-async function uploadAvatar(dataUrl, currentPassword) {
+async function uploadAvatar(dataUrl) {
   try {
     const res  = await fetch('/api/profile', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, currentPassword, avatar: dataUrl }) });
+      body: JSON.stringify({ userId: me.id, avatar: dataUrl }) });
     const data = await res.json();
     if (!res.ok) return;
     me = data;
@@ -1282,12 +1266,10 @@ async function uploadAvatar(dataUrl, currentPassword) {
 }
 
 async function removeAvatar() {
-  const currentPassword = getConfirmPass();
-  if (!currentPassword) { alert('Enter your password in the confirmation field first'); return; }
   try {
     const res  = await fetch('/api/profile', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: me.id, currentPassword, avatar: null }) });
+      body: JSON.stringify({ userId: me.id, avatar: null }) });
     const data = await res.json();
     if (!res.ok) return;
     me = data;

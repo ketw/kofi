@@ -1,0 +1,15 @@
+{
+  "name": "teachat",
+  "version": "1.0.0",
+  "description": "Local network chat app with P2P file sharing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "uuid": "^9.0.0",
+    "sql.js": "^1.12.0"
+  }
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeaChat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Login ─────────────────────────────────────────────────── -->
+  <div id="login-screen" class="screen">
+    <div class="login-box">
+      <div class="login-logo">☕</div>
+      <h1>TeaChat</h1>
+      <p>Local network chat. Pick a name to join.</p>
+      <input id="name-input" type="text" placeholder="Your name" maxlength="32" autocomplete="off" spellcheck="false" />
+      <button id="join-btn">Join</button>
+      <span id="login-error" class="error"></span>
+    </div>
+  </div>
+
+  <!-- ── Chat ──────────────────────────────────────────────────── -->
+  <div id="chat-screen" class="screen hidden">
+
+    <!-- Floating profile blob (top-right) -->
+    <button id="my-profile-btn" title="Your profile" aria-label="Open profile"></button>
+
+    <!-- Profile panel (slide-in from right) -->
+    <div id="profile-panel" class="hidden" role="dialog" aria-label="Profile settings">
+      <div class="pp-header">
+        <span class="pp-title">Your Profile</span>
+        <button class="pp-close" id="pp-close-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="pp-avatar-section">
+        <div class="pp-avatar-wrap">
+          <div id="pp-avatar-preview" class="pp-avatar-preview"></div>
+          <label class="pp-avatar-change" title="Upload photo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <input id="pp-avatar-input" type="file" accept="image/*" hidden />
+          </label>
+        </div>
+        <button id="pp-avatar-remove" class="pp-avatar-remove hidden">Remove photo</button>
+      </div>
+
+      <div class="pp-field-group">
+        <label class="pp-label">Display name</label>
+        <div class="pp-name-row">
+          <input id="pp-name-input" type="text" class="pp-input" maxlength="32" spellcheck="false" placeholder="Enter a name" />
+          <button id="pp-name-save" class="pp-btn-primary">Save</button>
+        </div>
+        <span id="pp-name-error" class="pp-error"></span>
+      </div>
+
+      <div class="pp-field-group" id="pp-aliases-group">
+        <label class="pp-label">Your names <span class="pp-label-sub">— all permanently yours</span></label>
+        <div id="pp-aliases-list" class="pp-aliases-list"></div>
+      </div>
+    </div>
+
+    <!-- Panel backdrop -->
+    <div id="profile-backdrop" class="hidden"></div>
+
+    <!-- Message feed -->
+    <div id="messages"></div>
+
+    <!-- Composer area -->
+    <div id="composer-wrap">
+      <div id="typing-bar"></div>
+      <div id="user-blobs"></div>
+      <div id="composer">
+        <label id="attach-btn" title="Attach file">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+          </svg>
+          <input id="file-input" type="file" multiple hidden />
+        </label>
+        <div id="file-previews"></div>
+        <textarea id="msg-input" placeholder="Message #general" rows="1"></textarea>
+        <button id="send-btn" title="Send (Enter)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

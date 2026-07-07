@@ -1,0 +1,57 @@
+/* ── Variables & Reset ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #231F20;
+  --surface:   #2F2B2C;
+  --surface2:  #3a3536;
+  --surface3:  #443f40;
+  --accent:    #E07A5F;
+  --accent-dk: #c4614a;
+  --text:      #F4F1DE;
+  --muted:     #9F9694;
+  --border:    rgba(244, 241, 222, 0.07);
+  --border-md: rgba(244, 241, 222, 0.12);
+  --danger:    #c0392b;
+
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* hidden until JS mounts the correct screen — prevents login flash */
+  visibility: hidden;
+}
+body.ready { visibility: visible; }
+
+.hidden { display: none !important; }
+.screen { height: 100vh; }
+#root   { height: 100%; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Shared error span ───────────────────────────────────────── */
+.error {
+  font-size: 0.8rem;
+  color: var(--accent);
+  min-height: 1em;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .msg-bubble    { max-width: 88vw; }
+  #composer-wrap { padding: 0 0.5rem 0.6rem; }
+  #messages      { padding: 0.75rem 0 0.25rem; }
+  .msg-group     { padding: 0.15rem 0.6rem; }
+}

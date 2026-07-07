@@ -1,0 +1,44 @@
+/* ── Login screen ────────────────────────────────────────────── */
+#login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.login-box {
+  background: var(--surface);
+  border: 1px solid var(--border-md);
+  padding: 2rem 2rem 1.75rem;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-box input {
+  padding: 0.65rem 0.8rem;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.login-box input:focus       { border-color: var(--accent); }
+.login-box input::placeholder { color: var(--muted); }
+
+.login-box button {
+  padding: 0.65rem;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.04em;
+}
+.login-box button:hover { background: var(--accent-dk); }

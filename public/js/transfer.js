@@ -164,6 +164,9 @@ function buildFileBubble(container, m, isMe, meta) {
   container.appendChild(wrapper);
 
   if (isMe) {
+    const mime = meta.mimeType || '';
+    const kind = mime.split('/')[0];
+    const isPdf = mime.includes('pdf');
     const file = hostedFiles.get(fileId);
     if (file) {
       // File in memory (same session) — open directly, instant, no network needed
@@ -177,14 +180,17 @@ function buildFileBubble(container, m, isMe, meta) {
         else if (isPdf) openPdfViewer(url, meta.name);
         else triggerDownload(url, meta.name);
       });
+      buildSaveIndicator(wrapper, fileId);
+      attachSaveBehaviour(wrapper, meta);
       return;
     }
     // After a page reload the in-memory file is gone — can't serve or download it.
-    // Show a clear message rather than silently doing nothing.
     faction.textContent = 'Reload lost the file — re-send to share again';
     faction.style.color = 'var(--muted)';
     bubble.style.cursor = 'default';
     bubble.title = 'The file is only held in your browser tab. Re-uploading will make it available again.';
+    buildSaveIndicator(wrapper, fileId);
+    attachSaveBehaviour(wrapper, meta);
     return;
   }
 
@@ -209,6 +215,9 @@ function buildFileBubble(container, m, isMe, meta) {
 
   let active = false;
   bubble.style.cursor = uploaderOnline ? 'pointer' : 'default';
+
+  buildSaveIndicator(wrapper, fileId);
+  attachSaveBehaviour(wrapper, meta);
 
   bubble.addEventListener('click', async () => {
     if (active) return;

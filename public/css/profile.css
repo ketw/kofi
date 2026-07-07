@@ -1,0 +1,181 @@
+/* ── Profile panel ───────────────────────────────────────────── */
+#profile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 299;
+  background: rgba(20,17,18,0.5);
+}
+
+#profile-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 300px;
+  z-index: 300;
+  background: var(--surface);
+  border-left: 1px solid var(--border-md);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.pp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.pp-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pp-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font);
+  transition: color 0.1s;
+}
+.pp-close:hover { color: var(--text); }
+
+/* Avatar section */
+.pp-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.4rem 1rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.pp-avatar-wrap     { position: relative; width: 76px; height: 76px; }
+.pp-avatar-preview  {
+  width: 76px; height: 76px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.pp-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.pp-avatar-change {
+  position: absolute;
+  bottom: -6px; right: -6px;
+  width: 24px; height: 24px;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.12s;
+}
+.pp-avatar-change:hover { background: var(--accent-dk); }
+
+.pp-avatar-remove {
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 0;
+  transition: color 0.1s;
+}
+.pp-avatar-remove:hover { color: var(--accent); }
+
+.pp-uid {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  padding: 0.15rem 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  user-select: all;
+}
+
+/* Field groups */
+.pp-field-group {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pp-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.pp-label-sub { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.7rem; }
+.pp-name-row  { display: flex; gap: 0.4rem; }
+
+.pp-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: var(--font);
+  padding: 0.45rem 0.6rem;
+  outline: none;
+  transition: border-color 0.12s;
+  min-width: 0;
+}
+.pp-input:focus       { border-color: var(--accent); }
+.pp-input::placeholder { color: var(--muted); }
+
+.pp-btn-primary {
+  padding: 0.45rem 0.8rem;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.pp-btn-primary:hover { background: var(--accent-dk); }
+.pp-error { font-size: 0.75rem; color: var(--accent); min-height: 1em; }
+
+/* Aliases list */
+.pp-aliases-list { display: flex; flex-direction: column; gap: 0.25rem; }
+.pp-alias-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pp-alias-row:hover       { background: var(--surface2); }
+.pp-alias-row.active      { background: rgba(224,122,95,0.12); border-left: 2px solid var(--accent); }
+.pp-alias-dot             { width: 6px; height: 6px; background: var(--muted); flex-shrink: 0; }
+.pp-alias-row.active .pp-alias-dot { background: var(--accent); }
+.pp-alias-name            { font-size: 0.85rem; color: var(--text); flex: 1; }
+.pp-alias-row.active .pp-alias-name { color: var(--accent); font-weight: 600; }
+.pp-alias-badge {
+  font-size: 0.65rem;
+  color: var(--muted);
+  background: var(--surface3);
+  padding: 0.1rem 0.35rem;
+  letter-spacing: 0.04em;
+}

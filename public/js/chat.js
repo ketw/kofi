@@ -94,6 +94,7 @@ async function enterChat(user) {
     .then(msgs => { for (const m of msgs) renderMessage(m, false); forceScrollBottom(); })
     .catch(() => {});
 
+  loadSaveState(); // initialise save indicators for rendered file bubbles
   connectWS();
 }
 
@@ -138,6 +139,8 @@ function handleWS(msg) {
     case 'file_request':   handleIncomingFileRequest(msg); break;
     case 'file_unavailable': handleFileUnavailable(msg); break;
     case 'profile_update': handleProfileUpdate(msg.profile); break;
+    case 'file_saved':     handleFileSaved(msg); break;
+    case 'file_unsaved':   handleFileUnsaved(msg); break;
   }
 }
 
@@ -223,6 +226,13 @@ function appendBubble(group, m, isMe) {
   if (m.type === 'file') {
     const meta = m.file_meta || {};
     const mime = meta.mimeType || '';
+
+    // If the file is saved on the server, use the server-backed bubble (always available)
+    const savers = fileSavers.get(meta.fileId) || [];
+    if (savers.length > 0) {
+      buildSavedFileBubble(body, meta.fileId, meta, savers);
+      return;
+    }
 
     if (isMe && hostedFiles.has(meta.fileId)) {
       // File is in memory — instant inline preview

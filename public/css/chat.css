@@ -155,6 +155,39 @@
 }
 .img-preview:hover { opacity: 0.9; }
 
+/* Saved image — persistent, accent bottom border to mark it as server-stored */
+.img-preview--saved {
+  border-bottom: 2px solid var(--accent);
+}
+
+/* ── Video thumbnail (saved files) ──────────────────────────── */
+.video-thumb {
+  position: relative;
+  display: inline-block;
+  max-width: 300px;
+  line-height: 0;
+  cursor: pointer;
+}
+.video-thumb video {
+  max-width: 300px;
+  max-height: 220px;
+  display: block;
+  object-fit: cover;
+}
+.video-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.28);
+  transition: background 0.12s;
+  pointer-events: none;
+}
+.video-thumb:hover .video-thumb-play { background: rgba(0,0,0,0.45); }
+
 /* ── Composer wrap ───────────────────────────────────────────── */
 #composer-wrap {
   flex-shrink: 0;

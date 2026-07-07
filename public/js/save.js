@@ -243,31 +243,56 @@ function buildSavedFileBubble(container, fileId, meta, savers) {
   const wrapper = mk('div', { className:'file-wrapper saved-file-wrapper' });
   wrapper.dataset.savedFileId = fileId;
 
-  const bubble  = mk('div', { className:'file-bubble saved-file-bubble' });
-  const icon    = mk('span', { className:'file-icon', textContent: fileIcon(meta.mimeType) });
-  const info    = mk('div', { className:'file-info' });
-  const fname   = mk('span', { className:'file-name', title:meta.name, textContent:meta.name });
-  const fsize   = mk('span', { className:'file-size', textContent:formatSize(meta.size) });
-  const faction = mk('span', { className:'file-action', textContent:'Saved in chat — click to open' });
-  faction.style.color = 'var(--accent)';
-  info.append(fname, fsize, faction);
-  bubble.append(icon, info);
+  const mime   = meta.mimeType || '';
+  const kind   = mime.split('/')[0];
+  const isPdf  = mime.includes('pdf');
+  const url    = `/api/saved/${fileId}`;
 
-  const mime = meta.mimeType || '';
-  const kind = mime.split('/')[0];
-  const isPdf = mime.includes('pdf');
+  if (kind === 'image') {
+    // Inline thumbnail — clicks open the full viewer
+    const img = mk('img', { className:'img-preview img-preview--saved', alt:meta.name });
+    img.src = url;
+    img.addEventListener('click', () => openMediaViewer(url, 'image', meta.name));
+    wrapper.appendChild(img);
 
-  bubble.style.cursor = 'pointer';
-  bubble.addEventListener('click', () => {
-    const url = `/api/saved/${fileId}`;
-    if (kind === 'image') openMediaViewer(url, 'image', meta.name);
-    else if (kind === 'video') openMediaViewer(url, 'video', meta.name);
-    else if (kind === 'audio') openMediaViewer(url, 'audio', meta.name);
-    else if (isPdf) openPdfViewer(url, meta.name);
-    else window.open(url, '_blank');
-  });
+  } else if (kind === 'video') {
+    // Video thumbnail — browser renders first frame from metadata
+    const thumb = mk('div', { className:'video-thumb' });
+    const vid = mk('video');
+    vid.src         = url;
+    vid.preload     = 'metadata';
+    vid.muted       = true;
+    vid.playsInline = true;
+    // Seek to 0.1s so the browser shows a real frame, not black
+    vid.addEventListener('loadedmetadata', () => { vid.currentTime = 0.1; });
+    const play = mk('div', { className:'video-thumb-play', textContent:'▶' });
+    thumb.append(vid, play);
+    thumb.style.cursor = 'pointer';
+    thumb.addEventListener('click', () => openMediaViewer(url, 'video', meta.name));
+    wrapper.appendChild(thumb);
 
-  wrapper.append(bubble);
+  } else if (kind === 'audio') {
+    wrapper.appendChild(buildAudioPlayer(url, meta.name));
+
+  } else if (isPdf) {
+    wrapper.appendChild(buildPdfBubble(url, meta.name, false));
+
+  } else {
+    // Generic file bubble for everything else
+    const bubble  = mk('div', { className:'file-bubble saved-file-bubble' });
+    const icon    = mk('span', { className:'file-icon', textContent: fileIcon(mime) });
+    const info    = mk('div', { className:'file-info' });
+    const fname   = mk('span', { className:'file-name', title:meta.name, textContent:meta.name });
+    const fsize   = mk('span', { className:'file-size', textContent:formatSize(meta.size) });
+    const faction = mk('span', { className:'file-action', textContent:'Saved in chat — click to download' });
+    faction.style.color = 'var(--accent)';
+    info.append(fname, fsize, faction);
+    bubble.append(icon, info);
+    bubble.style.cursor = 'pointer';
+    bubble.addEventListener('click', () => window.open(url, '_blank'));
+    wrapper.appendChild(bubble);
+  }
+
   updateSaveIndicator(fileId, savers);
   container.appendChild(wrapper);
 }

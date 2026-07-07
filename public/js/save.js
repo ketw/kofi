@@ -229,7 +229,6 @@ function buildSavedFileBubble(container, fileId, meta, savers) {
   });
 
   wrapper.append(bubble);
-  buildSaveIndicator(wrapper, fileId);
   updateSaveIndicator(fileId, savers);
   container.appendChild(wrapper);
 }

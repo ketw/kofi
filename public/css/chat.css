@@ -129,6 +129,22 @@
   background: var(--border);
 }
 
+/* ── Message wrapper (double-tap target, full width) ─────────── */
+/* Every piece of content (text, image, file, audio, pdf) sits   */
+/* inside a msg-wrapper so the entire row width is tappable.     */
+.msg-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 0;
+  position: relative;
+  /* subtle hover hint that it's interactive */
+  transition: background 0.1s;
+}
+.msg-wrapper:hover {
+  background: rgba(255,255,255,0.03);
+}
+
 /* ── Inline image ────────────────────────────────────────────── */
 .img-preview {
   max-width: 300px;

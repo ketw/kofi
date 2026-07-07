@@ -216,10 +216,15 @@ function renderMessage(m, live) {
 function appendBubble(group, m, isMe) {
   const body = group.querySelector('.msg-body') || group;
 
+  // Every piece of content lives inside a msg-wrapper.
+  // The wrapper spans the full msg-body width — double-tap anywhere on it to save.
+  const wrapper = mk('div', { className:'msg-wrapper' });
+
   if (m.type === 'text') {
     const bubble = mk('div', { className:'msg-bubble' });
     bubble.innerHTML = linkify(esc(m.content));
-    body.appendChild(bubble);
+    wrapper.appendChild(bubble);
+    body.appendChild(wrapper);
     return;
   }
 
@@ -230,7 +235,10 @@ function appendBubble(group, m, isMe) {
     // If the file is saved on the server, use the server-backed bubble (always available)
     const savers = fileSavers.get(meta.fileId) || [];
     if (savers.length > 0) {
-      buildSavedFileBubble(body, meta.fileId, meta, savers);
+      buildSavedFileBubble(wrapper, meta.fileId, meta, savers);
+      buildSaveIndicator(wrapper, meta.fileId);
+      body.appendChild(wrapper);
+      attachSaveBehaviour(wrapper, meta);
       return;
     }
 
@@ -240,18 +248,24 @@ function appendBubble(group, m, isMe) {
       if (mime.startsWith('image/')) {
         const img = mk('img', { className:'img-preview', alt:meta.name, src:url });
         img.addEventListener('click', () => openMediaViewer(url, 'image', meta.name));
-        body.appendChild(img);
+        wrapper.appendChild(img);
       } else if (mime.startsWith('audio/')) {
-        body.appendChild(buildAudioPlayer(url, meta.name));
+        wrapper.appendChild(buildAudioPlayer(url, meta.name));
       } else if (mime.includes('pdf')) {
-        body.appendChild(buildPdfBubble(url, meta.name, true));
+        wrapper.appendChild(buildPdfBubble(url, meta.name, true));
       } else {
-        buildFileBubble(body, m, isMe, meta);
+        buildFileBubble(wrapper, m, isMe, meta);
       }
     } else {
-      // Either not the uploader, or uploader reloaded and lost the in-memory file
-      buildFileBubble(body, m, isMe, meta);
+      buildFileBubble(wrapper, m, isMe, meta);
     }
+
+    // Attach save behaviour to the wrapper (full-width double-tap target)
+    if (meta.fileId) {
+      buildSaveIndicator(wrapper, meta.fileId);
+      attachSaveBehaviour(wrapper, meta);
+    }
+    body.appendChild(wrapper);
   }
 }
 

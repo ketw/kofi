@@ -4,7 +4,7 @@
 
 (async () => {
   try {
-    const res = await fetch('/api/session');
+    const res = await apiFetch('/api/session');
     if (res.ok) {
       buildChatScreen();
       reveal();
@@ -51,7 +51,7 @@ async function doLogin() {
   if (!password) { $('login-error').textContent = 'Password required'; return; }
   $('login-error').textContent = '';
   try {
-    const res  = await fetch('/api/auth', { method:'POST',
+    const res  = await apiFetch('/api/auth', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ name, password }) });
     const data = await res.json();

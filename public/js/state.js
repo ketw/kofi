@@ -96,6 +96,20 @@ let typingTimer  = null;
 let isTyping     = false;
 let lastGroup    = null; // { userId, el, lastTs }
 
+// ── API key — injected by app.js into window.KOFI_KEY at page load ───────
+// apiKey() returns the key, or '' if not present (external API consumers
+// supply their own key and don't load this file at all).
+function apiKey() {
+  return (typeof window !== 'undefined' && window.KOFI_KEY) ? window.KOFI_KEY : '';
+}
+
+// ── Fetch wrapper — attaches X-Kofi-Key to every request automatically ───
+function apiFetch(url, options = {}) {
+  const headers = new Headers(options.headers || {});
+  headers.set('X-Kofi-Key', apiKey());
+  return fetch(url, { ...options, headers });
+}
+
 // ── WebSocket send helper ─────────────────────────────────────────────────
 function send(obj) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));

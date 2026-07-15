@@ -58,6 +58,11 @@ async function initDB() {
       saved_at   INTEGER NOT NULL,
       PRIMARY KEY (file_id, user_id)
     );
+
+    CREATE TABLE IF NOT EXISTS server_config (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 
   // ── Migrations (safe to re-run on every start) ───────────────────────────

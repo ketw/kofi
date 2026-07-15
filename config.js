@@ -4,6 +4,26 @@
 
 module.exports = {
 
+  // ── API passcode ──────────────────────────────────────────────────────────
+  //
+  // Every request to the server — REST and WebSocket — must include this
+  // passcode. Without it the server returns 403 / closes the connection.
+  //
+  // Can be any string: a word, phrase, sentence, emoji, whatever you want.
+  // On first boot the server hashes it with bcrypt and stores only the hash.
+  // The plaintext is never written to the database — even reading the source
+  // code and the database together cannot reverse it.
+  //
+  // REST:      send as header  X-Kofi-Key: <passcode>
+  // WebSocket: include in the join message  { type:'join', key:'<passcode>', ... }
+  //
+  // You can also set this via environment variable instead of hardcoding it:
+  //   API_PASSCODE=mysecret node server.js
+  // The env var takes priority over whatever is written here.
+  //
+  // Change this to something only you know before hosting.
+  API_PASSCODE: process.env.API_PASSCODE || 'change-this-before-hosting',
+
   // ── File storage ──────────────────────────────────────────────────────────
 
   // Maximum file size that can be saved to the server (Save in Chat feature).

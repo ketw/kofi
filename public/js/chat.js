@@ -89,7 +89,7 @@ async function enterChat(user) {
   wireComposer();
 
   // Load history in background — don't block showing the chat
-  fetch('/api/messages')
+  apiFetch('/api/messages')
     .then(r => r.json())
     .then(msgs => { for (const m of msgs) renderMessage(m, false); forceScrollBottom(); })
     .catch(() => {});
@@ -102,7 +102,7 @@ async function enterChat(user) {
 function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}`);
-  ws.onopen    = () => ws.send(JSON.stringify({ type:'join', userId:me.id }));
+  ws.onopen    = () => ws.send(JSON.stringify({ type:'join', userId:me.id, key:apiKey() }));
   ws.onmessage = ({ data }) => { let m; try { m = JSON.parse(data); } catch { return; } handleWS(m); };
   ws.onclose   = () => setTimeout(connectWS, 2000);
 }

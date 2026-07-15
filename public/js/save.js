@@ -10,7 +10,7 @@ const fileSavers = new Map();
 // ── Load initial save state on page load ─────────────────────────────────
 async function loadSaveState() {
   try {
-    const data = await fetch('/api/saves').then(r => r.json());
+    const data = await apiFetch('/api/saves').then(r => r.json());
     for (const [fileId, savers] of Object.entries(data)) {
       fileSavers.set(fileId, savers);
     }
@@ -83,7 +83,7 @@ async function saveFile(fileId, meta, wrapper) {
 
   if (alreadyOnServer) {
     try {
-      const res = await fetch(`/api/save/${fileId}?name=${encodeURIComponent(meta.name)}&size=${meta.size}&mime=${encodeURIComponent(meta.mimeType || '')}`, {
+      const res = await apiFetch(`/api/save/${fileId}?name=${encodeURIComponent(meta.name)}&size=${meta.size}&mime=${encodeURIComponent(meta.mimeType || '')}`, {
         method: 'POST', body: '' });
       if (!res.ok) {
         const err = await res.json();
@@ -116,7 +116,7 @@ async function saveFile(fileId, meta, wrapper) {
   // Upload to server
   showSaveStatus(wrapper, 'Saving to chat…');
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/save/${fileId}?name=${encodeURIComponent(meta.name)}&size=${meta.size}&mime=${encodeURIComponent(meta.mimeType || '')}`,
       { method: 'POST', body: blob, headers: { 'Content-Type': meta.mimeType || 'application/octet-stream' } }
     );
@@ -131,7 +131,7 @@ async function saveFile(fileId, meta, wrapper) {
 // ── Unsave a file ─────────────────────────────────────────────────────────
 async function unsaveFile(fileId, wrapper) {
   try {
-    const res = await fetch(`/api/unsave/${fileId}`, { method: 'POST' });
+    const res = await apiFetch(`/api/unsave/${fileId}`, { method: 'POST' });
     if (!res.ok) {
       const err = await res.json();
       showSaveError(wrapper, err.error || 'Failed to unsave');

@@ -90,7 +90,7 @@ async function saveProfileName() {
   if (!newName || newName === me.name) { closeProfilePanel(); return; }
   $('pp-name-error').textContent = '';
   try {
-    const res  = await fetch('/api/profile', { method:'POST',
+    const res  = await apiFetch('/api/profile', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId:me.id, name:newName }) });
     const data = await res.json();
@@ -103,7 +103,7 @@ async function saveProfileName() {
 async function switchToAlias(alias) {
   $('pp-name-error').textContent = '';
   try {
-    const res  = await fetch('/api/profile', { method:'POST',
+    const res  = await apiFetch('/api/profile', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId:me.id, name:alias }) });
     const data = await res.json();
@@ -138,7 +138,7 @@ function handleAvatarUpload(e) {
 
 async function uploadAvatar(dataUrl) {
   try {
-    const res  = await fetch('/api/profile', { method:'POST',
+    const res  = await apiFetch('/api/profile', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId:me.id, avatar:dataUrl }) });
     const data = await res.json();
@@ -150,7 +150,7 @@ async function uploadAvatar(dataUrl) {
 
 async function removeAvatar() {
   try {
-    const res  = await fetch('/api/profile', { method:'POST',
+    const res  = await apiFetch('/api/profile', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId:me.id, avatar:null }) });
     const data = await res.json();
@@ -170,7 +170,7 @@ async function savePassword() {
     $('pp-pass-error').textContent = 'New password must be at least 4 characters'; return;
   }
   try {
-    const res  = await fetch('/api/profile', { method:'POST',
+    const res  = await apiFetch('/api/profile', { method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ userId:me.id, currentPassword, newPassword }) });
     const data = await res.json();

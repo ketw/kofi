@@ -15,6 +15,7 @@ const http    = require('http');
 const config  = require('./config');
 
 const { initDB }                               = require('./src/db');
+const { initApiKey, apiKeyMiddleware }         = require('./src/apikey');
 const { registerAuthRoutes }                   = require('./src/auth');
 const { registerProfileRoutes }                = require('./src/profile');
 const { loadFileRegistry, registerFileRoutes } = require('./src/files');
@@ -29,6 +30,9 @@ app.use(express.json({ limit: '4mb' }));
 // Raw body parser for file save uploads (bypasses the JSON size limit)
 app.use('/api/save', express.raw({ type: '*/*', limit: config.SAVE_SIZE_LIMIT_BYTES + 1024 }));
 
+// ── API key gate — every /api/* request must carry X-Kofi-Key ─────────────
+app.use('/api', apiKeyMiddleware);
+
 // ── API routes ─────────────────────────────────────────────────────────────
 registerAuthRoutes(app);
 registerProfileRoutes(app, broadcastAll, clients);
@@ -42,6 +46,7 @@ const PORT = process.env.PORT || config.PORT || 3000;
 
 async function start() {
   await initDB();
+  initApiKey();
   loadFileRegistry();
   await new Promise((resolve, reject) =>
     server.listen(PORT, '0.0.0.0', (err) => err ? reject(err) : resolve())

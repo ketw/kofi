@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const { dbGet, dbRun } = require('./db');
 const { getProfile } = require('./profile');
 const { fileRegistry } = require('./files');
+const { verifyWsKey } = require('./apikey');
 
 // ── Connected clients: ws → { socketId, userId, userName } ────────────────
 const clients = new Map();
@@ -53,9 +54,13 @@ function socketIdForUser(userId) {
 function attachWS(server) {
   const wss = new WebSocket.Server({ server });
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     const socketId = uuidv4();
-    clients.set(ws, { socketId, userId: null, userName: null });
+    const ip       = (req.headers['x-forwarded-for']
+      ? req.headers['x-forwarded-for'].split(',')[0]
+      : req.socket.remoteAddress || 'unknown').trim();
+
+    clients.set(ws, { socketId, userId: null, userName: null, ip, authenticated: false });
 
     ws.on('message', (raw) => {
       let msg;
@@ -82,6 +87,14 @@ function handleMessage(ws, msg, socketId) {
   switch (msg.type) {
 
     case 'join': {
+      // Verify API key before anything else
+      if (!verifyWsKey(msg.key, client.ip)) {
+        ws.send(JSON.stringify({ type: 'error', message: 'Invalid API key' }));
+        ws.close();
+        return;
+      }
+      client.authenticated = true;
+
       const user = dbGet('SELECT * FROM users WHERE id = ?', [msg.userId]);
       if (!user) {
         ws.send(JSON.stringify({ type: 'error', message: 'Unknown user' }));
@@ -106,7 +119,7 @@ function handleMessage(ws, msg, socketId) {
     }
 
     case 'message': {
-      if (!client.userId) return;
+      if (!client.userId || !client.authenticated) return;
       const text = (msg.content || '').toString().trim().slice(0, 4000);
       if (!text) return;
       const id = uuidv4(), now = Date.now();
@@ -123,7 +136,7 @@ function handleMessage(ws, msg, socketId) {
     }
 
     case 'file_announce': {
-      if (!client.userId) return;
+      if (!client.userId || !client.authenticated) return;
       const { fileId, name, size, mimeType } = msg;
       if (!fileId || !name) return;
 
@@ -150,7 +163,7 @@ function handleMessage(ws, msg, socketId) {
     }
 
     case 'file_request': {
-      if (!client.userId) return;
+      if (!client.userId || !client.authenticated) return;
       const { fileId, requestId, resumeFrom = 0 } = msg;
       const reg = fileRegistry.get(fileId);
       if (!reg) {
@@ -182,7 +195,7 @@ function handleMessage(ws, msg, socketId) {
     }
 
     case 'typing': {
-      if (!client.userId) return;
+      if (!client.userId || !client.authenticated) return;
       broadcast({
         type: 'typing',
         userId: client.userId,
